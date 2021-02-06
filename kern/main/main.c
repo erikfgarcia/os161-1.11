@@ -2,6 +2,8 @@
  * Main.
  */
 
+/* Ryan Sears */
+
 #include <types.h>
 #include <kern/errno.h>
 #include <kern/unistd.h>
@@ -16,6 +18,7 @@
 #include <vm.h>
 #include <syscall.h>
 #include <version.h>
+#include "hello.c"
 
 /*
  * These two pieces of data are maintained by the makefiles and build system.
@@ -61,6 +64,9 @@ boot(void)
 	 * dev/generic/console.c).
 	 */
 
+	/* added hello world form hello.c */
+	hello();
+	
 	kprintf("\n");
 	kprintf("OS/161 base system version %s\n", BASE_VERSION);
 	kprintf("%s", harvard_copyright);
