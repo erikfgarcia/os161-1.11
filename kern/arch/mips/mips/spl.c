@@ -67,6 +67,8 @@ int curspl = SPL_HIGH;
 int
 splx(int newspl)
 {
+	DEBUG(DB_INTERRUPT, "Setting spl level\n");	
+
 	int oldspl;
 	
 	/*
@@ -111,6 +113,8 @@ splx(int newspl)
 int 
 splhigh(void)
 {
+	DEBUG(DB_INTERRUPT, "spl set to high\n");
+
 	return splx(SPL_HIGH);
 }
 
@@ -161,6 +165,8 @@ cpu_idle(void)
 void
 cpu_halt(void)
 {
+	DEBUG(DB_INTERRUPT, "CPU halted\n");
+
 	/*
 	 * See notes in cpu_idle.
 	 */

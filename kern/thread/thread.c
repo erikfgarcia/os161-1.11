@@ -43,6 +43,8 @@ static
 struct thread *
 thread_create(const char *name)
 {
+	DEBUG(DB_THREADS, "Thread created\n");
+	
 	struct thread *thread = kmalloc(sizeof(struct thread));
 	if (thread==NULL) {
 		return NULL;
@@ -75,6 +77,8 @@ static
 void
 thread_destroy(struct thread *thread)
 {
+	DEBUG(DB_THREADS, "Thread destroyed\n");
+	
 	assert(thread != curthread);
 
 	// If you add things to the thread structure, be sure to dispose of
@@ -101,6 +105,8 @@ static
 void
 exorcise(void)
 {
+	DEBUG(DB_THREADS, "Thread exorcise beginning\n");
+
 	int i, result;
 
 	assert(curspl>0);
@@ -123,6 +129,8 @@ static
 void
 thread_killall(void)
 {
+	DEBUG(DB_THREADS, "All sleeping threads being killed\n");
+
 	int i, result;
 
 	assert(curspl>0);
@@ -428,6 +436,8 @@ mi_switch(threadstate_t nextstate)
 void
 thread_exit(void)
 {
+	DEBUG(DB_THREADS, "Thread being exited\n");
+
 	if (curthread->t_stack != NULL) {
 		/*
 		 * Check the magic number we put on the bottom end of
@@ -510,6 +520,8 @@ thread_sleep(const void *addr)
 void
 thread_wakeup(const void *addr)
 {
+	DEBUG(DB_THREADS, "Thread awakening\n");
+
 	int i, result;
 	
 	// meant to be called with interrupts off

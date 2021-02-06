@@ -48,6 +48,8 @@
 void
 mips_syscall(struct trapframe *tf)
 {
+	DEBUG(DB_SYSCALL, "Mips system call\n");	
+
 	int callno;
 	int32_t retval;
 	int err;
