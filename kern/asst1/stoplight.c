@@ -27,10 +27,10 @@
  */
 
 /*
- * Number of cars created.
+ * Number of vehicles created.
  */
 
-#define NCARS 20
+#define NVEHICLES 20
 
 
 /*
@@ -40,44 +40,14 @@
  */
 
 
-/*
- * gostraight()
- *
- * Arguments:
- *      unsigned long cardirection: the direction from which the car
- *              approaches the intersection.
- *      unsigned long carnumber: the car id number for printing purposes.
- *
- * Returns:
- *      nothing.
- *
- * Notes:
- *      This function should implement passing straight through the
- *      intersection from any direction.
- *      Write and comment this function.
- */
-
-static
-void
-gostraight(unsigned long cardirection,
-           unsigned long carnumber)
-{
-        /*
-         * Avoid unused variable warnings.
-         */
-        
-        (void) cardirection;
-        (void) carnumber;
-}
-
 
 /*
  * turnleft()
  *
  * Arguments:
- *      unsigned long cardirection: the direction from which the car
+ *      unsigned long vehicledirection: the direction from which the vehicle
  *              approaches the intersection.
- *      unsigned long carnumber: the car id number for printing purposes.
+ *      unsigned long vehiclenumber: the vehicle id number for printing purposes.
  *
  * Returns:
  *      nothing.
@@ -90,15 +60,17 @@ gostraight(unsigned long cardirection,
 
 static
 void
-turnleft(unsigned long cardirection,
-         unsigned long carnumber)
+turnleft(unsigned long vehicledirection,
+		unsigned long vehiclenumber,
+		unsigned long vehicletype)
 {
-        /*
-         * Avoid unused variable warnings.
-         */
+	/*
+	 * Avoid unused variable warnings.
+	 */
 
-        (void) cardirection;
-        (void) carnumber;
+	(void) vehicledirection;
+	(void) vehiclenumber;
+	(void) vehicletype;
 }
 
 
@@ -106,9 +78,9 @@ turnleft(unsigned long cardirection,
  * turnright()
  *
  * Arguments:
- *      unsigned long cardirection: the direction from which the car
+ *      unsigned long vehicledirection: the direction from which the vehicle
  *              approaches the intersection.
- *      unsigned long carnumber: the car id number for printing purposes.
+ *      unsigned long vehiclenumber: the vehicle id number for printing purposes.
  *
  * Returns:
  *      nothing.
@@ -121,15 +93,17 @@ turnleft(unsigned long cardirection,
 
 static
 void
-turnright(unsigned long cardirection,
-          unsigned long carnumber)
+turnright(unsigned long vehicledirection,
+		unsigned long vehiclenumber,
+		unsigned long vehicletype)
 {
-        /*
-         * Avoid unused variable warnings.
-         */
+	/*
+	 * Avoid unused variable warnings.
+	 */
 
-        (void) cardirection;
-        (void) carnumber;
+	(void) vehicledirection;
+	(void) vehiclenumber;
+	(void) vehicletype;
 }
 
 
@@ -138,48 +112,49 @@ turnright(unsigned long cardirection,
  *
  * Arguments: 
  *      void * unusedpointer: currently unused.
- *      unsigned long carnumber: holds car id number.
+ *      unsigned long vehiclenumber: holds vehicle id number.
  *
  * Returns:
  *      nothing.
  *
  * Notes:
  *      Change this function as necessary to implement your solution. These
- *      threads are created by createcars().  Each one must choose a direction
+ *      threads are created by createvehicles().  Each one must choose a direction
  *      randomly, approach the intersection, choose a turn randomly, and then
  *      complete that turn.  The code to choose a direction randomly is
  *      provided, the rest is left to you to implement.  Making a turn
  *      or going straight should be done by calling one of the functions
  *      above.
  */
- 
+
 static
 void
 approachintersection(void * unusedpointer,
-                     unsigned long carnumber)
+		unsigned long vehiclenumber)
 {
-        int cardirection;
+	int vehicledirection, turndirection, vehicletype;
 
-        /*
-         * Avoid unused variable and function warnings.
-         */
+	/*
+	 * Avoid unused variable and function warnings.
+	 */
 
-        (void) unusedpointer;
-        (void) carnumber;
-	(void) gostraight;
+	(void) unusedpointer;
+	(void) vehiclenumber;
 	(void) turnleft;
 	(void) turnright;
 
-        /*
-         * cardirection is set randomly.
-         */
+	/*
+	 * vehicledirection is set randomly.
+	 */
 
-        cardirection = random() % 4;
+	vehicledirection = random() % 3;
+	turndirection = random() % 2;
+	vehicletype = random() % 2;
 }
 
 
 /*
- * createcars()
+ * createvehicles()
  *
  * Arguments:
  *      int nargs: unused.
@@ -194,42 +169,42 @@ approachintersection(void * unusedpointer,
  */
 
 int
-createcars(int nargs,
-           char ** args)
+createvehicles(int nargs,
+		char ** args)
 {
-        int index, error;
+	int index, error;
 
-        /*
-         * Avoid unused variable warnings.
-         */
+	/*
+	 * Avoid unused variable warnings.
+	 */
 
-        (void) nargs;
-        (void) args;
+	(void) nargs;
+	(void) args;
 
-        /*
-         * Start NCARS approachintersection() threads.
-         */
+	/*
+	 * Start NVEHICLES approachintersection() threads.
+	 */
 
-        for (index = 0; index < NCARS; index++) {
+	for (index = 0; index < NVEHICLES; index++) {
 
-                error = thread_fork("approachintersection thread",
-                                    NULL,
-                                    index,
-                                    approachintersection,
-                                    NULL
-                                    );
+		error = thread_fork("approachintersection thread",
+				NULL,
+				index,
+				approachintersection,
+				NULL
+				);
 
-                /*
-                 * panic() on error.
-                 */
+		/*
+		 * panic() on error.
+		 */
 
-                if (error) {
-                        
-                        panic("approachintersection: thread_fork failed: %s\n",
-                              strerror(error)
-                              );
-                }
-        }
+		if (error) {
 
-        return 0;
+			panic("approachintersection: thread_fork failed: %s\n",
+					strerror(error)
+				 );
+		}
+	}
+
+	return 0;
 }
