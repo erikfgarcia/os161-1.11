@@ -40,6 +40,21 @@
  */
 
 
+/*
+ * START of added functions
+ */
+
+// function prototypes
+
+void printInfo();
+
+// functions
+
+
+/*
+ * END of added functions
+ */
+
 
 /*
  * turnleft()
@@ -208,3 +223,15 @@ createvehicles(int nargs,
 
 	return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
