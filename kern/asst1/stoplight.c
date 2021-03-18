@@ -46,9 +46,11 @@
 
 // function prototypes
 
-void printInfo();
+void printVehicle();
 
 // functions
+
+
 
 
 /*
