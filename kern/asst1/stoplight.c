@@ -34,6 +34,25 @@
 
 
 /*
+ * Car parameters meanings:
+ * 
+ * vehicletype [0,1]
+ *	- 0: car
+ *	- 1: truck
+ *
+ * vehicledirection [0,2]
+ *	- 0: A
+ *	- 1: B
+ *	- 2: C
+ *
+ * turndirection [0,1]
+ *  - 0: left
+ *  - 1: right
+ *
+ */
+
+
+/*
  *
  * Function Definitions
  *
@@ -41,20 +60,62 @@
 
 
 /*
- * START of added functions
+ * START of added variables/functions
  */
+
+// variables
+
+const char *car_types[2];
+car_types[0] = "Car";
+car_types[1] = "Truck";
+
+const char *car_directions = "ABC";
+
+const char *turn_directions[2];
+turn_directions[0] = "Left";
+turn_directions[1] = "Right";
+
 
 // function prototypes
 
-void printVehicle();
+void print_vehicle(char *action, unsigned long vehicledirection,
+	unsigned long vehiclenumber, unsigned long vehicletype,
+	unsigned long turndirection, char *location);
+
+char get_dest(unsigned long vehicledirection, unsigned long turndirection);
 
 // functions
 
+// Prints all necessary vehicle info
+void print_vehicle(char *action, unsigned long vehicledirection,
+    unsigned long vehiclenumber, unsigned long vehicletype,
+	unsigned long turndirection, char *location) {
+	char *direction = car_directions[vehicledirection];
+	char *turn = turn_directions[turndirection];
+	char *type = car_types[vehicletype];
+	char dest = get_dest(vehicledirectio, turndirection);
 
+	kprintf("#: %d, Action: %s, Type: %s, Direction: %c, Dest.: %c \
+		Location: %s\n", vehiclenumber, action, type, direction,
+		dest, location);
+}
+
+// Gets char of destination from given direction and turn values
+char get_dest(unsigned long vehicledirection, unsigned long turndirection) {
+	int idx = turndirection==0 ? vehicledirection-1 : vehicledirection+1;
+	char dest;
+
+	// find char result
+	if(idx > 2) dest = 'A';
+	else if(idx < 0) dest = 'C';
+	else dest = car_directions[idx];
+
+	return dest;
+}
 
 
 /*
- * END of added functions
+ * END of added variables/functions
  */
 
 
