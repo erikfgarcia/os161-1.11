@@ -65,15 +65,9 @@
 
 // variables
 
-const char *car_types[2];
-car_types[0] = "Car";
-car_types[1] = "Truck";
-
-const char *car_directions = "ABC";
-
-const char *turn_directions[2];
-turn_directions[0] = "Left";
-turn_directions[1] = "Right";
+char car_types[2][6] = {"Car", "Truck"};
+char car_directions[] = "ABC";
+char turn_directions[2][6] = {"Left", "Right"};
 
 
 // function prototypes
@@ -81,8 +75,8 @@ turn_directions[1] = "Right";
 void print_vehicle(char *action, unsigned long vehicledirection,
 	unsigned long vehiclenumber, unsigned long vehicletype,
 	unsigned long turndirection, char *location);
-
 char get_dest(unsigned long vehicledirection, unsigned long turndirection);
+void stoplight_init();
 
 // functions
 
@@ -90,12 +84,12 @@ char get_dest(unsigned long vehicledirection, unsigned long turndirection);
 void print_vehicle(char *action, unsigned long vehicledirection,
     unsigned long vehiclenumber, unsigned long vehicletype,
 	unsigned long turndirection, char *location) {
-	char *direction = car_directions[vehicledirection];
-	char *turn = turn_directions[turndirection];
+	char direction = car_directions[vehicledirection];
+	//char *turn = turn_directions[turndirection];
 	char *type = car_types[vehicletype];
-	char dest = get_dest(vehicledirectio, turndirection);
+	char dest = get_dest(vehicledirection, turndirection);
 
-	kprintf("#: %d, Action: %s, Type: %s, Direction: %c, Dest.: %c \
+	kprintf("#: %lu, Action: %s, Type: %s, Direction: %c, Dest.: %c \
 		Location: %s\n", vehiclenumber, action, type, direction,
 		dest, location);
 }
@@ -111,6 +105,17 @@ char get_dest(unsigned long vehicledirection, unsigned long turndirection) {
 	else dest = car_directions[idx];
 
 	return dest;
+}
+
+// initialize program globals
+void stoplight_init() {
+	/*car_types[0] = "Car";
+	car_types[1] = "Truck";
+
+	car_directions = "ABC";
+
+	turn_directions[0] = "Left";
+	turn_directions[1] = "Right";*/
 }
 
 
@@ -251,6 +256,13 @@ createvehicles(int nargs,
 		char ** args)
 {
 	int index, error;
+
+	// Added
+	
+	stoplight_init();
+	
+	// Added
+
 
 	/*
 	 * Avoid unused variable warnings.
