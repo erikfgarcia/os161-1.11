@@ -225,6 +225,31 @@ turnleft(unsigned long vehicledirection,
 	struct lock *lock_cars;
 	int *cars_count;
 
+
+	// check direction, define corresponding locks/counters
+	if(vehicledirection == 0) {
+		// from A
+
+		// define cars lock and counter for A
+		lock_cars = lock_cars_A;
+		cars_count = &cars_A;
+	}
+	else if (vehicledirection == 1) {
+		// from B
+
+		// define cars lock and counter for B
+		lock_cars = lock_cars_A;
+		cars_count = &cars_B;
+	}
+	else {
+		// from C
+
+		// define cars lock and counter for C
+		lock_cars = lock_cars_B;
+		cars_count = &cars_C;
+	}
+
+
 	// continue until vehicle enters intersection and completes route
 	int has_entered = 0;
 	while(has_entered == 0) {
@@ -235,30 +260,6 @@ turnleft(unsigned long vehicledirection,
 			thread_yield();
 			continue;
 		}
-		
-		// check direction, define corresponding locks/counters
-		if(vehicledirection == 0) {
-			// from A	
-				
-			// define cars lock and counter for A
-			lock_cars = lock_cars_A;
-			cars_count = &cars_A;		
-		}
-		else if (vehicledirection == 1) {
-			// from B
-			
-			// define cars lock and counter for B
-			lock_cars = lock_cars_A;
-			cars_count = &cars_B;	
-		}
-		else {
-			// from C
-	
-			// define cars lock and counter for C
-			lock_cars = lock_cars_B;
-			cars_count = &cars_C;
-		}
-
 
 		// special actions for trucks
 		lock_acquire(lock_cars);
@@ -288,6 +289,14 @@ turnleft(unsigned long vehicledirection,
 
 		// enter first section
 		lock_acquire(lock1);
+
+		// decrease cars_count at direction if car
+		if(vehicletype == 0) {
+			lock_acquire(lock_cars);
+			(*cars_count)--;
+			lock_release(lock_cars);
+		}
+
 		print_vehicle("Entered intersection", vehicledirection,
    			vehiclenumber, vehicletype, 0, lock1->name);
 		lock_release(lock1);
@@ -334,6 +343,76 @@ turnright(unsigned long vehicledirection,
 	(void) vehicledirection;
 	(void) vehiclenumber;
 	(void) vehicletype;
+
+	// ADDED
+	
+	struct lock *lock1 = get_lock_1(vehicledirection);
+	struct lock *lock_cars;
+	int *cars_count;
+
+	// get cars lock and counter for direction	
+	if(vehicledirection == 0) {
+		// from A	
+
+		lock_cars = lock_cars_A;
+		cars_count = &cars_A;
+	}
+	if(vehicledirection == 1) {
+    	// from B
+	 
+		lock_cars = lock_cars_B;
+      	cars_count = &cars_B;
+    }
+	if(vehicledirection == 0) {
+    	// from C 
+	
+	 	lock_cars = lock_cars_C;
+        cars_count = &cars_C;
+    }
+
+
+	int has_entered = 0;
+	while(has_entered == 0) {
+		// special actions for trucks
+		lock_acquire(lock_cars);
+		if(vehicletype == 1) {
+			// is a truck, check car_count for direction
+			lock_acquire(lock_cars);
+			if((*cars_count) > 0){
+				// truck waits on cars, retry
+				lock_release(lock_cars);
+				thread_yield();
+				continue;
+			}
+
+			// truck enters
+			lock_release(lock_cars_A);
+		}
+		else {
+			// increment cars count for direction
+			(*cars_count)++;
+			lock_release(lock_cars);
+		}
+		
+		
+		// wait on section
+		lock_acquire(lock1);
+
+		// decrease cars_count at direction if car
+		if(vehicletype == 0) { 
+			lock_acquire(lock_cars);
+        	(*cars_count)--;
+        	lock_release(lock_cars);
+		}
+	
+
+		print_vehicle("Entered intersection", vehicledirection,
+			vehiclenumber, vehicletype, 0, lock1->name);
+		lock_release(lock1);	
+			
+		// success, exit loop
+		has_entered = 1;
+	}
 }
 
 
