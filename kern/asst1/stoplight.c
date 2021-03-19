@@ -92,7 +92,7 @@ struct lock *lock_lefts;
 
 // function prototypes
 
-void print_vehicle(char *action, unsigned long vehicledirection,
+void print_vehicle(const char *action, unsigned long vehicledirection,
 	unsigned long vehiclenumber, unsigned long vehicletype,
 	unsigned long turndirection, char *location);
 char get_dest(unsigned long vehicledirection, unsigned long turndirection);
@@ -104,7 +104,7 @@ struct lock *left_lock_2(unsigned long vehicledirection);
 // functions
 
 // Prints all necessary vehicle info
-void print_vehicle(char *action, unsigned long vehicledirection,
+void print_vehicle(const char *action, unsigned long vehicledirection,
     unsigned long vehiclenumber, unsigned long vehicletype,
 	unsigned long turndirection, char *location) {
 	char direction = car_directions[vehicledirection];
@@ -133,9 +133,9 @@ char get_dest(unsigned long vehicledirection, unsigned long turndirection) {
 // initialize program globals
 void stoplight_init() {
 	// section locks
-	lock_AB = lock_create("Lock AB");
-	lock_BC = lock_create("Lock BC");
-	lock_CA = lock_create("Lock CA");
+	lock_AB = lock_create("AB");
+	lock_BC = lock_create("BC");
+	lock_CA = lock_create("CA");
 
 	// car count locks
 	lock_cars_A = lock_create("Lock Cars A");
@@ -220,50 +220,86 @@ turnleft(unsigned long vehicledirection,
 
 	// ADDED
 
+	struct lock *lock1 = get_lock_1(vehicledirection);
+	struct lock *lock2 = left_lock_2(vehicledirection);
+	struct lock *lock_cars;
+	int *cars_count;
+
 	// continue until vehicle enters intersection and completes route
 	int has_entered = 0;
 	while(has_entered == 0) {
-		// prevent left-turn deadlock, only allow 2
+		// prevent left-turn deadlock, only allow 2 lefts
 		lock_acquire(lock_lefts);
 		if(lefts_count > 1) {
 			lock_release(lock_lefts);
 			thread_yield();
 			continue;
 		}
-		else {
-			lefts_count++;
-		}
-		lock_release(lock_lefts);
-
-		// check direction
+		
+		// check direction, define corresponding locks/counters
 		if(vehicledirection == 0) {
 			// from A	
 				
-			// special actions for trucks
-			lock_acquire(lock_cars_A);
-			if(vehicletype == 1) {
-				// is a truck, check car_count for 2 opposing direction
-				if(cars_A > 0){
-					// truck waits on cars, retry
-					lock_release(lock_cars_A);
-					thread_yield();
-					continue;
-				}
-			}
-			else {
-				// increment cars count for A
-				cars_A++;
-				lock_release(lock_cars_A);
-			}
+			// define cars lock and counter for A
+			lock_cars = lock_cars_A;
+			cars_count = &cars_A;		
 		}
 		else if (vehicledirection == 1) {
 			// from B
-	
+			
+			// define cars lock and counter for B
+			lock_cars = lock_cars_A;
+			cars_count = &cars_B;	
 		}
 		else {
 			// from C
 	
+			// define cars lock and counter for C
+			lock_cars = lock_cars_B;
+			cars_count = &cars_C;
 		}
+
+
+		// special actions for trucks
+		lock_acquire(lock_cars);
+		if(vehicletype == 1) {
+			// is a truck, check car_count for direction
+			if((*cars_count) > 0){
+				// truck waits on cars, retry
+				lock_release(lock_cars);
+				thread_yield();
+				continue;
+			}
+
+			// truck enters
+			lock_release(lock_cars);
+		}
+		else {
+			// increment cars count for direction
+			(*cars_count)++;
+			lock_release(lock_cars);
+		}
+
+		// entered intersection
+		lefts_count++;
+		lock_release(lock_lefts);
+	
+		// wait on required locks
+
+		// enter first section
+		lock_acquire(lock1);
+		print_vehicle("Entered intersection", vehicledirection,
+   			vehiclenumber, vehicletype, 0, lock1->name);
+		lock_release(lock1);
+		
+		// enter second section
+		lock_acquire(lock2);
+		print_vehicle("Entered intersection", vehicledirection,
+            vehiclenumber, vehicletype, 0, lock2->name);
+		lock_release(lock2);
+
+		// success, exit loop
+		has_entered = 1;
 	}
 }
 
