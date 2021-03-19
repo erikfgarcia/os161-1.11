@@ -168,15 +168,15 @@ struct lock *get_lock_1(unsigned long vehicledirection){
 struct lock *left_lock_2(unsigned long vehicledirection){
     if(vehicledirection == 0) {
         // from A
-        return lock_AB;
+        return lock_BC;
     }
     else if(vehicledirection == 1) {
         // from B
-        return lock_BC;
+        return lock_CA;
     }
     else {
         // from C
-        return lock_CA;
+        return lock_AB;
     }
 }
 
