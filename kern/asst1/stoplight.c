@@ -19,6 +19,8 @@
 #include <test.h>
 #include <thread.h>
 
+#include <synch.h>
+
 
 /*
  *
@@ -65,9 +67,27 @@
 
 // variables
 
+// to convert int to string/char
 char car_types[2][6] = {"Car", "Truck"};
 char car_directions[] = "ABC";
 char turn_directions[2][6] = {"Left", "Right"};
+
+// section locks
+static struct lock *lock_AB;
+static struct lock *lock_BC;
+static struct lock *lock_CA;
+
+// car count locks and ints
+int cars_A = 0;
+int cars_B = 0;
+int cars_C = 0;
+struct lock *lock_cars_A;
+struct lock *lock_cars_B;
+struct lock *lock_cars_C;
+
+// left turn counts and ints
+int lefts_count = 0;
+struct lock *lock_lefts;
 
 
 // function prototypes
@@ -77,6 +97,9 @@ void print_vehicle(char *action, unsigned long vehicledirection,
 	unsigned long turndirection, char *location);
 char get_dest(unsigned long vehicledirection, unsigned long turndirection);
 void stoplight_init();
+struct lock *get_lock_1(unsigned long vehicledirection);
+struct lock *left_lock_2(unsigned long vehicledirection);
+
 
 // functions
 
@@ -109,14 +132,54 @@ char get_dest(unsigned long vehicledirection, unsigned long turndirection) {
 
 // initialize program globals
 void stoplight_init() {
-	/*car_types[0] = "Car";
-	car_types[1] = "Truck";
+	// section locks
+	lock_AB = lock_create("Lock AB");
+	lock_BC = lock_create("Lock BC");
+	lock_CA = lock_create("Lock CA");
 
-	car_directions = "ABC";
+	// car count locks
+	lock_cars_A = lock_create("Lock Cars A");
+	lock_cars_B = lock_create("Lock Cars B");
+	lock_cars_C = lock_create("Lock Cars C");
 
-	turn_directions[0] = "Left";
-	turn_directions[1] = "Right";*/
+	// left turn counts
+	lock_lefts = lock_create("Lock Lefts");
+
 }
+
+// Get first lock needed for left-turn from vehcledirection OR
+// 		Get lock needed for right-turn
+struct lock *get_lock_1(unsigned long vehicledirection){
+	if(vehicledirection == 0) {
+		// from A
+		return lock_AB;
+	}
+	else if(vehicledirection == 1) {
+		// from B
+		return lock_BC;
+	}
+	else {
+		// from C
+		return lock_CA;
+	}
+}
+
+// Get second lock needed for left-turn from vehcledirection
+struct lock *left_lock_2(unsigned long vehicledirection){
+    if(vehicledirection == 0) {
+        // from A
+        return lock_AB;
+    }
+    else if(vehicledirection == 1) {
+        // from B
+        return lock_BC;
+    }
+    else {
+        // from C
+        return lock_CA;
+    }
+}
+
 
 
 /*
@@ -154,6 +217,54 @@ turnleft(unsigned long vehicledirection,
 	(void) vehicledirection;
 	(void) vehiclenumber;
 	(void) vehicletype;
+
+	// ADDED
+
+	// continue until vehicle enters intersection and completes route
+	int has_entered = 0;
+	while(has_entered == 0) {
+		// prevent left-turn deadlock, only allow 2
+		lock_acquire(lock_lefts);
+		if(lefts_count > 1) {
+			lock_release(lock_lefts);
+			thread_yield();
+			continue;
+		}
+		else {
+			lefts_count++;
+		}
+		lock_release(lock_lefts);
+
+		// check direction
+		if(vehicledirection == 0) {
+			// from A	
+				
+			// special actions for trucks
+			lock_acquire(lock_cars_A);
+			if(vehicletype == 1) {
+				// is a truck, check car_count for 2 opposing direction
+				if(cars_A > 0){
+					// truck waits on cars, retry
+					lock_release(lock_cars_A);
+					thread_yield();
+					continue;
+				}
+			}
+			else {
+				// increment cars count for A
+				cars_A++;
+				lock_release(lock_cars_A);
+			}
+		}
+		else if (vehicledirection == 1) {
+			// from B
+	
+		}
+		else {
+			// from C
+	
+		}
+	}
 }
 
 
@@ -233,6 +344,17 @@ approachintersection(void * unusedpointer,
 	vehicledirection = random() % 3;
 	turndirection = random() % 2;
 	vehicletype = random() % 2;
+
+	// ADDED
+
+	if(turndirection == 0) {
+		// turn left
+		turnleft(vehicledirection, vehiclenumber, vehicletype);	
+	}
+	else {
+		// turn right
+		turnright(vehicledirection, vehiclenumber, vehicletype);
+	}
 }
 
 
@@ -295,6 +417,13 @@ createvehicles(int nargs,
 				 );
 		}
 	}
+
+	// ADDED
+	
+	// destroy locks
+	lock_destroy(lock_AB);
+	lock_destroy(lock_BC);
+	lock_destroy(lock_CA);	
 
 	return 0;
 }
