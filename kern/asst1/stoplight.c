@@ -392,7 +392,7 @@ turnright(unsigned long vehicledirection,
 			}
 
 			// truck enters
-			lock_release(lock_cars_A);
+			lock_release(lock_cars);
 		}
 		else {
 			// increment cars count for direction
