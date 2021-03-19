@@ -260,6 +260,10 @@ turnleft(unsigned long vehicledirection,
 			thread_yield();
 			continue;
 		}
+		else {
+			lefts_count++;
+			lock_release(lock_lefts);
+		}
 
 		// special actions for trucks
 		lock_acquire(lock_cars);
@@ -282,9 +286,6 @@ turnleft(unsigned long vehicledirection,
 		}
 
 		// entered intersection
-		lefts_count++;
-		lock_release(lock_lefts);
-	
 		// wait on required locks
 
 		// enter first section
@@ -306,6 +307,11 @@ turnleft(unsigned long vehicledirection,
 		print_vehicle("Entered intersection", vehicledirection,
             vehiclenumber, vehicletype, 0, lock2->name);
 		lock_release(lock2);
+
+		// decrease lefts_count
+		lock_acquire(lock_lefts);
+		lefts_count--;
+		lock_release(lock_lefts);
 
 		// success, exit loop
 		has_entered = 1;
@@ -539,6 +545,10 @@ createvehicles(int nargs,
 	lock_destroy(lock_AB);
 	lock_destroy(lock_BC);
 	lock_destroy(lock_CA);	
+	lock_destroy(lock_cars_A);
+	lock_destroy(lock_cars_B);
+	lock_destroy(lock_cars_C);
+
 
 	return 0;
 }
