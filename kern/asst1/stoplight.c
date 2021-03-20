@@ -298,15 +298,20 @@ turnleft(unsigned long vehicledirection,
 			lock_release(lock_cars);
 		}
 
-		print_vehicle("Entered intersection", vehicledirection,
+		print_vehicle("Entered", vehicledirection,
    			vehiclenumber, vehicletype, 0, lock1->name);
 		lock_release(lock1);
 		
 		// enter second section
 		lock_acquire(lock2);
-		print_vehicle("Entered intersection", vehicledirection,
+		print_vehicle("Entered", vehicledirection,
             vehiclenumber, vehicletype, 0, lock2->name);
 		lock_release(lock2);
+
+		// leaves
+		char dest[] = {get_dest(vehicledirection, 0)};
+		print_vehicle("Exited", vehicledirection,
+            vehiclenumber, vehicletype, 0, dest);
 
 		// decrease lefts_count
 		lock_acquire(lock_lefts);
@@ -412,9 +417,14 @@ turnright(unsigned long vehicledirection,
 		}
 	
 
-		print_vehicle("Entered intersection", vehicledirection,
-			vehiclenumber, vehicletype, 0, lock1->name);
+		print_vehicle("Entered", vehicledirection,
+			vehiclenumber, vehicletype, 1, lock1->name);
 		lock_release(lock1);	
+
+		// leaves
+		char dest[] = {get_dest(vehicledirection, 1)};
+        print_vehicle("Exited", vehicledirection,
+            vehiclenumber, vehicletype, 1, dest);
 			
 		// success, exit loop
 		has_entered = 1;
@@ -467,6 +477,10 @@ approachintersection(void * unusedpointer,
 	vehicletype = random() % 2;
 
 	// ADDED
+
+	char start[] = {car_directions[vehicledirection]};
+	print_vehicle("Approached", vehicledirection, vehiclenumber, 
+		vehicletype, turndirection, start);
 
 	if(turndirection == 0) {
 		// turn left
