@@ -116,7 +116,7 @@ lock_create(const char *name)
 	}
 	
 	// add stuff here as needed
-	lock->is_held = 0;// new lock
+	lock->is_held = 0;// new lock         
 
 	lock->block_thread =  q_create(50); // initialize this lock's queue
 	if(lock->block_thread ==NULL)
@@ -128,9 +128,10 @@ void
 lock_destroy(struct lock *lock)
 {
 	assert(lock != NULL);
-
+          
 	// add stuff here as needed
-	
+	assert(!lock->is_held);
+
 	kfree(lock->name);
 	kfree(lock);
 }
@@ -148,18 +149,11 @@ lock_acquire(struct lock *lock)
 	if(lock->is_held){// someone has the lock
 		q_addtail(lock->block_thread, curthread);
 		thread_sleep(curthread->t_sleepaddr); 
-                 splx();
+                splx(spl);
                
-		while (lock->holder != curthread)
+		while (lock->holder != curthread){ }	
 
-	//	lock->holder = curthread;
-	//	lock->is_held = 1;
-	//	splx(spl);
-	
-//	splx(spl);
-	
-
-	}else{//no body has the lock
+	}else{ //no body has the lock
 		lock->holder = curthread;
 		lock->is_held = 1;
 		splx(spl);
