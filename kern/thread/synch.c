@@ -9,6 +9,7 @@
 #include <thread.h>
 #include <curthread.h>
 #include <machine/spl.h>
+#include <queue.h>
 
 ////////////////////////////////////////////////////////////
 //
@@ -115,7 +116,11 @@ lock_create(const char *name)
 	}
 	
 	// add stuff here as needed
-	
+	lock->is_held = 0;// new lock
+
+	lock->block_thread =  q_create(50); // initialize this lock's queue
+	if(lock->block_thread ==NULL)
+		panic("synch: could not create block queue for lock");
 	return lock;
 }
 
@@ -134,26 +139,80 @@ void
 lock_acquire(struct lock *lock)
 {
 	// Write this
+	assert(lock != NULL);
+	assert(in_interrupt==0);
+	int spl = splhigh();
+	assert(!lock_do_i_hold(lock));
 
-	(void)lock;  // suppress warning until code gets written
+
+	if(lock->is_held){// someone has the lock
+		q_addtail(lock->block_thread, curthread);
+		thread_sleep(curthread->t_sleepaddr); 
+                 splx();
+               
+		while (lock->holder != curthread)
+
+	//	lock->holder = curthread;
+	//	lock->is_held = 1;
+	//	splx(spl);
+	
+//	splx(spl);
+	
+
+	}else{//no body has the lock
+		lock->holder = curthread;
+		lock->is_held = 1;
+		splx(spl);
+	}
+
+//	(void)lock;  // suppress warning until code gets written
 }
 
 void
 lock_release(struct lock *lock)
 {
 	// Write this
+	
+	assert(lock != NULL);
+	assert(lock->is_held);  // the lock is held 
+	assert(lock_do_i_hold(lock)); // make sure I hold the lock
 
-	(void)lock;  // suppress warning until code gets written
+
+	int spl;
+	spl = splhigh();
+	
+	lock->is_held=0;
+	lock->holder=NULL;
+	if(!q_empty(lock->block_thread)){
+        	struct thread *t = q_remhead(lock->block_thread);
+		thread_wakeup(t->t_sleepaddr);
+		lock->holder = t;
+		lock->is_held =1;
+		
+	}
+	splx(spl);
+
+//	(void)lock;  // suppress warning until code gets written
 }
 
 int
 lock_do_i_hold(struct lock *lock)
 {
 	// Write this
+	assert(lock != NULL);
 
-	(void)lock;  // suppress warning until code gets written
+  	if (!lock->is_held)
+        	return 0;
 
-	return 1;    // dummy until code gets written
+  	if (lock->holder == curthread)
+        	return 1;
+  
+        return 0;
+
+
+//	(void)lock;  // suppress warning until code gets written
+
+//	return 1;    // dummy until code gets written
 }
 
 ////////////////////////////////////////////////////////////
