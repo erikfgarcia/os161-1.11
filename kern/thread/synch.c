@@ -145,6 +145,21 @@ lock_acquire(struct lock *lock)
 	int spl = splhigh();
 	assert(!lock_do_i_hold(lock));
 
+/*
+//busy wating implemetation
+
+           while(lock->is_held){ 
+
+		thread_sleep(lock);
+   	   }
+
+ 		lock->holder = curthread;
+		lock->is_held =1;
+		splx(spl);
+
+*/
+
+
 
 	if(lock->is_held){// someone has the lock
 		q_addtail(lock->block_thread, curthread);
@@ -157,6 +172,7 @@ lock_acquire(struct lock *lock)
 		lock->holder = curthread;
 		lock->is_held = 1;
 		splx(spl);
+
 	}
 
 //	(void)lock;  // suppress warning until code gets written
@@ -171,12 +187,17 @@ lock_release(struct lock *lock)
 	assert(lock->is_held);  // the lock is held 
 	assert(lock_do_i_hold(lock)); // make sure I hold the lock
 
-
 	int spl;
 	spl = splhigh();
 	
 	lock->is_held=0;
 	lock->holder=NULL;
+	
+
+// thread_wakeup(lock); // busy wating implemetation
+// splx(spl); //busy wating implemetation
+
+///*
 	if(!q_empty(lock->block_thread)){
         	struct thread *t = q_remhead(lock->block_thread);
 		thread_wakeup(t->t_sleepaddr);
@@ -185,6 +206,7 @@ lock_release(struct lock *lock)
 		
 	}
 	splx(spl);
+//*/
 
 //	(void)lock;  // suppress warning until code gets written
 }

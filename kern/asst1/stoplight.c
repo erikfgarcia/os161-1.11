@@ -388,7 +388,7 @@ turnright(unsigned long vehicledirection,
 		lock_acquire(lock_cars);
 		if(vehicletype == 1) {
 			// is a truck, check car_count for direction
-			lock_acquire(lock_cars);
+		//	lock_acquire(lock_cars); // no this will lock_acquire more than one 
 			if((*cars_count) > 0){
 				// truck waits on cars, retry
 				lock_release(lock_cars);
@@ -472,9 +472,11 @@ approachintersection(void * unusedpointer,
 	 * vehicledirection is set randomly.
 	 */
 
-	vehicledirection = random() % 3;
-	turndirection = random() % 2;
-	vehicletype = random() % 2;
+	vehicledirection = 0;// random() % 3;
+	turndirection = 1;// random() % 2;
+	vehicletype = 0;//random() % 2;
+	// I'm trying only cars turning rigth coming from A
+
 
 	// ADDED
 
@@ -556,14 +558,15 @@ createvehicles(int nargs,
 	// ADDED
 	
 	// destroy locks
-	lock_destroy(lock_AB);
+/*	lock_destroy(lock_AB);  // don't do this some threads will destroy the lock when
+ *	                         //the lock still need it for other threads 
 	lock_destroy(lock_BC);
 	lock_destroy(lock_CA);	
 	lock_destroy(lock_cars_A);
 	lock_destroy(lock_cars_B);
 	lock_destroy(lock_cars_C);
 
-
+*/
 	return 0;
 }
 
