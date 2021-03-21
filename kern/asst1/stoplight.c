@@ -262,7 +262,7 @@ turnleft(unsigned long vehicledirection,
 			continue;
 		}
 		else {
-			//lefts_count++;
+			lefts_count++;
 			lock_release(lock_lefts);
 		}
 
@@ -273,7 +273,8 @@ turnleft(unsigned long vehicledirection,
 			if((*cars_count) > 0){
 				// truck waits on cars, retry
 				lock_release(lock_cars);
-	
+			
+				// temp: decrement left count since retry occurs	
 				lock_acquire(lock_lefts);
 				lefts_count--;
 				lock_release(lock_lefts);
@@ -423,9 +424,9 @@ turnright(unsigned long vehicledirection,
         	lock_release(lock_cars);
 		}
 	
-
 		print_vehicle("Entered", vehicledirection,
 			vehiclenumber, vehicletype, 1, lock1->name);
+	
 		lock_release(lock1);	
 
 		// leaves
