@@ -107,7 +107,7 @@ void stoplight_init();
 struct lock *get_lock_1(unsigned long vehicledirection);
 struct lock *left_lock_2(unsigned long vehicledirection);
 void print_synch(const char *text);
-
+void print_threads_done();
 
 // functions
 
@@ -204,6 +204,13 @@ void print_synch(const char *text) {
 	lock_release(lock_print);
 }
 
+// prints number of threads currently completed
+void print_threads_done() {
+	lock_acquire(lock_print);
+	kprintf("THREADS: %d\n", threads_done);
+	lock_release(lock_print);
+}
+
 
 /*
  * END of added variables/functions
@@ -281,7 +288,7 @@ turnleft(unsigned long vehicledirection,
 		// check if able to enter		
 		lock_acquire(lock_lefts);
 		lock_acquire(lock_cars);
-		if(lefts_count<1 && !(vehicletype==0 || cars_count==0)) {
+		if(lefts_count>=2 || !(vehicletype==0 || cars_count==0)) {
 			// retry
 			lock_release(lock_cars);
 			lock_release(lock_lefts);
@@ -597,14 +604,15 @@ createvehicles(int nargs,
 
 	// wait for all threads to finish
 	while(1) {
-		//print_synch("COMPLETION CHECK\n");
-		
+		print_synch("COMPLETION CHECK\n");
+		print_threads_done();	
+	
 		lock_acquire(lock_threads);
 		if(threads_done >= NVEHICLES)
 			break;
 		lock_release(lock_threads);
 
-		//print_synch("NOT COMPLETED\n");
+		print_synch("NOT COMPLETED\n");
 	}
 
 	
