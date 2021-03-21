@@ -89,6 +89,9 @@ struct lock *lock_cars_C;
 int lefts_count = 0;
 struct lock *lock_lefts;
 
+// lock for printing vehicle info
+struct lock *lock_print;
+
 
 // function prototypes
 
@@ -111,9 +114,14 @@ void print_vehicle(const char *action, unsigned long vehicledirection,
 	//char *turn = turn_directions[turndirection];
 	char *type = car_types[vehicletype];
 	char dest = get_dest(vehicledirection, turndirection);
+	char *turn = turn_directions[turndirection];
 
-	kprintf("\n#: %lu, Action: %s, Type: %s, Direction: %c, Dest.: %c, Location: %s\n", 
-		vehiclenumber, action, type, direction, dest, location);
+	lock_acquire(lock_print);
+
+	kprintf("\n#: %lu, Action: %s, Type: %s, Direction: %c, Turn: %s, Dest.: %c, Location: %s\n", 
+		vehiclenumber, action, type, direction, turn, dest, location);
+
+	lock_release(lock_print);
 }
 
 // Gets char of destination from given direction and turn values
@@ -144,6 +152,8 @@ void stoplight_init() {
 	// left turn counts
 	lock_lefts = lock_create("Lock Lefts");
 
+	// printing lock
+	lock_print = lock_create("Lock Printing");
 }
 
 // Get first lock needed for left-turn from vehcledirection OR
@@ -209,7 +219,7 @@ turnleft(unsigned long vehicledirection,
 		unsigned long vehiclenumber,
 		unsigned long vehicletype)
 {
-	 kprintf("\nLeft attempt\n");
+	// kprintf("\nLeft attempt\n");
 
 	/*
 	 * Avoid unused variable warnings.
@@ -254,43 +264,25 @@ turnleft(unsigned long vehicledirection,
 	// continue until vehicle enters intersection and completes route
 	int has_entered = 0;
 	while(has_entered == 0) {
-		// prevent left-turn deadlock, only allow 2 lefts
+		// check if able to enter		
 		lock_acquire(lock_lefts);
-		if(lefts_count > 1) {
+		lock_acquire(lock_cars);
+		if(lefts_count<1 && !(vehicletype==0 || cars_count==0)) {
+			// retry
+			lock_release(lock_cars);
 			lock_release(lock_lefts);
-			thread_yield();
+
 			continue;
 		}
 		else {
+			// success
+			if(vehicletype==0) (*cars_count)++;
 			lefts_count++;
+
+			lock_release(lock_cars);
 			lock_release(lock_lefts);
 		}
 
-		// special actions for trucks
-		lock_acquire(lock_cars);
-		if(vehicletype == 1) {
-			// is a truck, check car_count for direction
-			if((*cars_count) > 0){
-				// truck waits on cars, retry
-				lock_release(lock_cars);
-			
-				// temp: decrement left count since retry occurs	
-				lock_acquire(lock_lefts);
-				lefts_count--;
-				lock_release(lock_lefts);
-
-				thread_yield();
-				continue;
-			}
-
-			// truck enters
-			lock_release(lock_cars);
-		}
-		else {
-			// increment cars count for direction
-			(*cars_count)++;
-			lock_release(lock_cars);
-		}
 
 		// entered intersection
 		// wait on required locks
@@ -298,15 +290,9 @@ turnleft(unsigned long vehicledirection,
 		// enter first section
 		lock_acquire(lock1);
 
-		// decrease cars_count at direction if car
-		if(vehicletype == 0) {
-			lock_acquire(lock_cars);
-			(*cars_count)--;
-			lock_release(lock_cars);
-		}
-
 		print_vehicle("Entered", vehicledirection,
    			vehiclenumber, vehicletype, 0, lock1->name);
+
 		lock_release(lock1);
 		
 		// enter second section
@@ -315,14 +301,24 @@ turnleft(unsigned long vehicledirection,
             vehiclenumber, vehicletype, 0, lock2->name);
 		lock_release(lock2);
 
+
 		// leaves
 		char dest[] = {get_dest(vehicledirection, 0), '\0'};
+
+		//kprintf("\nDEST: %s\n", dest);
+
 		print_vehicle("Exited", vehicledirection,
             vehiclenumber, vehicletype, 0, dest);
 
-		// decrease lefts_count
+
+		// decrease counts
 		lock_acquire(lock_lefts);
+		lock_acquire(lock_cars);
+
+		if(vehicletype==0) (*cars_count)--;
 		lefts_count--;
+
+		lock_release(lock_cars);
 		lock_release(lock_lefts);
 
 		// success, exit loop
@@ -354,7 +350,7 @@ turnright(unsigned long vehicledirection,
 		unsigned long vehiclenumber,
 		unsigned long vehicletype)
 {
-	kprintf("\nRight attempt\n");
+	//kprintf("\nRight attempt\n");
 	
 	/*
 	 * Avoid unused variable warnings.
@@ -393,23 +389,18 @@ turnright(unsigned long vehicledirection,
 
 	int has_entered = 0;
 	while(has_entered == 0) {
-		// special actions for trucks
+		// check if able to enter		
 		lock_acquire(lock_cars);
-		if(vehicletype == 1) {
-			// is a truck, check car_count for direction
-			if((*cars_count) > 0){
-				// truck waits on cars, retry
-				lock_release(lock_cars);
-				thread_yield();
-				continue;
-			}
-
-			// truck enters
+		if(!(vehicletype==0 || (*cars_count)==0)) {
+			// retry
+						
 			lock_release(lock_cars);
+			continue;
 		}
 		else {
-			// increment cars count for direction
-			(*cars_count)++;
+			// success
+		
+			if(vehicletype==0) (*cars_count)++;	
 			lock_release(lock_cars);
 		}
 		
@@ -431,7 +422,10 @@ turnright(unsigned long vehicledirection,
 
 		// leaves
 		char dest[] = {get_dest(vehicledirection, 1), '\0'};
-        print_vehicle("Exited", vehicledirection,
+        
+		//kprintf("\nDEST: %s\n", dest);
+
+		print_vehicle("Exited", vehicledirection,
             vehiclenumber, vehicletype, 1, dest);
 			
 		// success, exit loop
@@ -487,10 +481,10 @@ approachintersection(void * unusedpointer,
 
 	
 	// NOT RANDOM
-	/*vehicledirection = 0;// random() % 3;
-	turndirection = 1;// random() % 2;
-	vehicletype = 0;//random() % 2;
-	*/
+	//vehicledirection = 0;// random() % 3;
+	//turndirection = 1;// random() % 2;
+	//vehicletype = 0;//random() % 2;
+	
 
 	// ADDED
 
