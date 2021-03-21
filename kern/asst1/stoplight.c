@@ -112,9 +112,8 @@ void print_vehicle(const char *action, unsigned long vehicledirection,
 	char *type = car_types[vehicletype];
 	char dest = get_dest(vehicledirection, turndirection);
 
-	kprintf("#: %lu, Action: %s, Type: %s, Direction: %c, Dest.: %c \
-		Location: %s\n", vehiclenumber, action, type, direction,
-		dest, location);
+	kprintf("\n#: %lu, Action: %s, Type: %s, Direction: %c, Dest.: %c, Location: %s\n", 
+		vehiclenumber, action, type, direction, dest, location);
 }
 
 // Gets char of destination from given direction and turn values
@@ -309,7 +308,7 @@ turnleft(unsigned long vehicledirection,
 		lock_release(lock2);
 
 		// leaves
-		char dest[] = {get_dest(vehicledirection, 0)};
+		char dest[] = {get_dest(vehicledirection, 0), '\0'};
 		print_vehicle("Exited", vehicledirection,
             vehiclenumber, vehicletype, 0, dest);
 
@@ -388,7 +387,6 @@ turnright(unsigned long vehicledirection,
 		lock_acquire(lock_cars);
 		if(vehicletype == 1) {
 			// is a truck, check car_count for direction
-		//	lock_acquire(lock_cars); // no this will lock_acquire more than one 
 			if((*cars_count) > 0){
 				// truck waits on cars, retry
 				lock_release(lock_cars);
@@ -422,7 +420,7 @@ turnright(unsigned long vehicledirection,
 		lock_release(lock1);	
 
 		// leaves
-		char dest[] = {get_dest(vehicledirection, 1)};
+		char dest[] = {get_dest(vehicledirection, 1), '\0'};
         print_vehicle("Exited", vehicledirection,
             vehiclenumber, vehicletype, 1, dest);
 			
@@ -472,15 +470,18 @@ approachintersection(void * unusedpointer,
 	 * vehicledirection is set randomly.
 	 */
 
-	vehicledirection = 0;// random() % 3;
+	vehicledirection = random() % 3;
+	turndirection = random() % 2;
+	vehicletype = random() % 2;
+
+	/*vehicledirection = 0;// random() % 3;
 	turndirection = 1;// random() % 2;
 	vehicletype = 0;//random() % 2;
-	// I'm trying only cars turning rigth coming from A
-
+	*/
 
 	// ADDED
 
-	char start[] = {car_directions[vehicledirection]};
+	char start[] = {car_directions[vehicledirection], '\0'};
 	print_vehicle("Approached", vehicledirection, vehiclenumber, 
 		vehicletype, turndirection, start);
 
@@ -558,15 +559,15 @@ createvehicles(int nargs,
 	// ADDED
 	
 	// destroy locks
-/*	lock_destroy(lock_AB);  // don't do this some threads will destroy the lock when
- *	                         //the lock still need it for other threads 
+	/*lock_destroy(lock_AB);
 	lock_destroy(lock_BC);
 	lock_destroy(lock_CA);	
 	lock_destroy(lock_cars_A);
 	lock_destroy(lock_cars_B);
 	lock_destroy(lock_cars_C);
+	lock_destroy(lock_lefts);*/
 
-*/
+
 	return 0;
 }
 
