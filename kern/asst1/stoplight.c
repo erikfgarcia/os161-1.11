@@ -209,6 +209,8 @@ turnleft(unsigned long vehicledirection,
 		unsigned long vehiclenumber,
 		unsigned long vehicletype)
 {
+	 kprintf("\nLeft attempt\n");
+
 	/*
 	 * Avoid unused variable warnings.
 	 */
@@ -260,7 +262,7 @@ turnleft(unsigned long vehicledirection,
 			continue;
 		}
 		else {
-			lefts_count++;
+			//lefts_count++;
 			lock_release(lock_lefts);
 		}
 
@@ -271,6 +273,11 @@ turnleft(unsigned long vehicledirection,
 			if((*cars_count) > 0){
 				// truck waits on cars, retry
 				lock_release(lock_cars);
+	
+				lock_acquire(lock_lefts);
+				lefts_count--;
+				lock_release(lock_lefts);
+
 				thread_yield();
 				continue;
 			}
@@ -346,6 +353,8 @@ turnright(unsigned long vehicledirection,
 		unsigned long vehiclenumber,
 		unsigned long vehicletype)
 {
+	kprintf("\nRight attempt\n");
+	
 	/*
 	 * Avoid unused variable warnings.
 	 */
@@ -373,7 +382,7 @@ turnright(unsigned long vehicledirection,
 		lock_cars = lock_cars_B;
       	cars_count = &cars_B;
     }
-	if(vehicledirection == 0) {
+	else {
     	// from C 
 	
 	 	lock_cars = lock_cars_C;
@@ -473,7 +482,10 @@ approachintersection(void * unusedpointer,
 	vehicledirection = random() % 3;
 	turndirection = random() % 2;
 	vehicletype = random() % 2;
+	
 
+	
+	// NOT RANDOM
 	/*vehicledirection = 0;// random() % 3;
 	turndirection = 1;// random() % 2;
 	vehicletype = 0;//random() % 2;
