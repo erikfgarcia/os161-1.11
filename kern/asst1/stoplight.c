@@ -118,7 +118,7 @@ void print_vehicle(const char *action, unsigned long vehicledirection,
 
 	lock_acquire(lock_print);
 
-	kprintf("\n#: %lu, Action: %s, Type: %s, Direction: %c, Turn: %s, Dest.: %c, Location: %s\n", 
+	kprintf("#: %lu, Action: %s, Type: %s, Direction: %c, Turn: %s, Dest.: %c, Location: %s\n", 
 		vehiclenumber, action, type, direction, turn, dest, location);
 
 	lock_release(lock_print);
@@ -271,7 +271,8 @@ turnleft(unsigned long vehicledirection,
 			// retry
 			lock_release(lock_cars);
 			lock_release(lock_lefts);
-
+	
+			//thread_yield();
 			continue;
 		}
 		else {
@@ -395,6 +396,8 @@ turnright(unsigned long vehicledirection,
 			// retry
 						
 			lock_release(lock_cars);
+			
+			//thread_yield();
 			continue;
 		}
 		else {
