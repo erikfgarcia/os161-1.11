@@ -237,14 +237,14 @@ turnleft(unsigned long vehicledirection,
 		// from B
 
 		// define cars lock and counter for B
-		lock_cars = lock_cars_A;
+		lock_cars = lock_cars_B;
 		cars_count = &cars_B;
 	}
 	else {
 		// from C
 
 		// define cars lock and counter for C
-		lock_cars = lock_cars_B;
+		lock_cars = lock_cars_C;
 		cars_count = &cars_C;
 	}
 
@@ -473,6 +473,11 @@ approachintersection(void * unusedpointer,
 	vehicledirection = random() % 3;
 	turndirection = random() % 2;
 	vehicletype = random() % 2;
+
+	/*vehicledirection = 0;// random() % 3;
+	turndirection = 1;// random() % 2;
+	vehicletype = 0;//random() % 2;
+	*/
 
 	// ADDED
 
