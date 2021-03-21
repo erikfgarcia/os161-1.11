@@ -237,14 +237,14 @@ turnleft(unsigned long vehicledirection,
 		// from B
 
 		// define cars lock and counter for B
-		lock_cars = lock_cars_A;
+		lock_cars = lock_cars_B;
 		cars_count = &cars_B;
 	}
 	else {
 		// from C
 
 		// define cars lock and counter for C
-		lock_cars = lock_cars_B;
+		lock_cars = lock_cars_C;
 		cars_count = &cars_C;
 	}
 
