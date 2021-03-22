@@ -123,7 +123,7 @@ void print_vehicle(const char *action, unsigned long vehicledirection,
 
 	lock_acquire(lock_print);
 
-	kprintf("#: %lu, Action: %s, Type: %s, Direction: %c, Turn: %s, Dest.: %c, Location: %s\n", 
+	kprintf("\n#: %lu, Action: %s, Type: %s, Direction: %c, Turn: %s, Dest.: %c, Location: %s\n", 
 		vehiclenumber, action, type, direction, turn, dest, location);
 
 	lock_release(lock_print);
@@ -301,6 +301,7 @@ turnleft(unsigned long vehicledirection,
 			// retry
 			lock_release(lock_cars);
 			lock_release(lock_lefts);
+<<<<<<< HEAD
 	
 			/*lock_acquire(lock_print);
 			kprintf("DEBUG -- lefts=%d, type=%lu, cars=%d\n", lefts_count, vehicletype, 
@@ -308,6 +309,9 @@ turnleft(unsigned long vehicledirection,
 			lock_release(lock_print);*/
 
 			//thread_yield();
+=======
+
+>>>>>>> parent of 62f92f2... minor print update, still error present with OS printing during runtime
 			continue;
 		}
 		else {
@@ -436,8 +440,6 @@ turnright(unsigned long vehicledirection,
 			// retry
 						
 			lock_release(lock_cars);
-			
-			//thread_yield();
 			continue;
 		}
 		else {
