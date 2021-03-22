@@ -162,6 +162,12 @@ void stoplight_init() {
 
 	// lock for thread completion check
 	lock_threads = lock_create("Lock Threads");
+	
+	threads_done = 0;
+	cars_A = 0;
+	cars_B = 0;
+	cars_C = 0;
+	lefts_count = 0;
 }
 
 // Get first lock needed for left-turn from vehcledirection OR
@@ -543,6 +549,8 @@ approachintersection(void * unusedpointer,
 	threads_done++;
 	lock_release(lock_threads);
 
+	print_threads_done();
+
 	// wait for all threads to finish
 	/*while(1) {
 		lock_acquire(lock_threads);
@@ -621,8 +629,10 @@ createvehicles(int nargs,
 		print_threads_done();	
 	
 		lock_acquire(lock_threads);
-		if(threads_done >= NVEHICLES)
+		if(threads_done >= NVEHICLES) {
+			lock_release(lock_threads);
 			break;
+		}
 		lock_release(lock_threads);
 
 		print_synch("NOT COMPLETED\n");
