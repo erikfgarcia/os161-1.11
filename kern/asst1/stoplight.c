@@ -207,7 +207,9 @@ void print_synch(const char *text) {
 // prints number of threads currently completed
 void print_threads_done() {
 	lock_acquire(lock_print);
+	lock_acquire(lock_threads);
 	kprintf("THREADS: %d\n", threads_done);
+	lock_release(lock_threads);
 	lock_release(lock_print);
 }
 
@@ -285,20 +287,28 @@ turnleft(unsigned long vehicledirection,
 	// continue until vehicle enters intersection and completes route
 	int has_entered = 0;
 	while(has_entered == 0) {
+		//print_synch("LEFT\n");
 		// check if able to enter		
 		lock_acquire(lock_lefts);
 		lock_acquire(lock_cars);
-		if(lefts_count>=2 || !(vehicletype==0 || cars_count==0)) {
+		if(lefts_count>=2 || !(vehicletype==0 || (*cars_count)==0)) {
 			// retry
 			lock_release(lock_cars);
 			lock_release(lock_lefts);
 	
+			/*lock_acquire(lock_print);
+			kprintf("DEBUG -- lefts=%d, type=%lu, cars=%d\n", lefts_count, vehicletype, 
+				*cars_count);
+			lock_release(lock_print);*/
+
 			//thread_yield();
 			continue;
 		}
 		else {
 			// success
-			if(vehicletype==0) (*cars_count)++;
+			if(vehicletype==0) {
+				(*cars_count)++;
+			}
 			lefts_count++;
 
 			lock_release(lock_cars);
@@ -337,7 +347,9 @@ turnleft(unsigned long vehicledirection,
 		lock_acquire(lock_lefts);
 		lock_acquire(lock_cars);
 
-		if(vehicletype==0) (*cars_count)--;
+		if(vehicletype==0) {
+			(*cars_count)--;
+		}
 		lefts_count--;
 
 		lock_release(lock_cars);
@@ -411,6 +423,7 @@ turnright(unsigned long vehicledirection,
 
 	int has_entered = 0;
 	while(has_entered == 0) {
+		//print_synch("RIGHT\n");
 		// check if able to enter		
 		lock_acquire(lock_cars);
 		if(!(vehicletype==0 || (*cars_count)==0)) {
@@ -506,7 +519,7 @@ approachintersection(void * unusedpointer,
 	
 	// NOT RANDOM
 	//vehicledirection = 0;// random() % 3;
-	//turndirection = 1;// random() % 2;
+	//turndirection = 0;// random() % 2;
 	//vehicletype = 0;//random() % 2;
 	
 
