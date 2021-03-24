@@ -130,7 +130,7 @@ lock_destroy(struct lock *lock)
 	assert(lock != NULL);
           
 	// add stuff here as needed
-	assert(!lock->is_held);
+	assert(!lock_do_i_hold(lock)); // checks the thread is not in use
 
 	kfree(lock->name);
 	kfree(lock);
@@ -140,25 +140,10 @@ void
 lock_acquire(struct lock *lock)
 {
 	// Write this
-	assert(lock != NULL);
+	assert(lock != NULL); // checks
 	assert(in_interrupt==0);
 	int spl = splhigh();
 	assert(!lock_do_i_hold(lock));
-
-/*
-//busy wating implemetation
-
-           while(lock->is_held){ 
-
-		thread_sleep(lock);
-   	   }
-
- 		lock->holder = curthread;
-		lock->is_held =1;
-		splx(spl);
-
-*/
-
 
 
 	if(lock->is_held){// someone has the lock
@@ -194,10 +179,6 @@ lock_release(struct lock *lock)
 	lock->holder=NULL;
 	
 
-// thread_wakeup(lock); // busy wating implemetation
-// splx(spl); //busy wating implemetation
-
-///*
 	if(!q_empty(lock->block_thread)){
         	struct thread *t = q_remhead(lock->block_thread);
 		thread_wakeup(t->t_sleepaddr);
@@ -206,7 +187,7 @@ lock_release(struct lock *lock)
 		
 	}
 	splx(spl);
-//*/
+
 
 //	(void)lock;  // suppress warning until code gets written
 }

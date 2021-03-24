@@ -87,14 +87,27 @@ struct lock *lock_cars_C;
 
 // left turn counts and ints
 int lefts_count = 0;
+int no_check = 1;
 struct lock *lock_lefts;
+struct lock *just_two;
 
 // lock for printing vehicle info
 struct lock *lock_print;
 
-// lock and counter for completed threads
+struct lock *lock_threads; 
 int threads_done = 0;
-struct lock *lock_threads;
+
+
+//truck check
+struct lock *lock_truck_c_A;
+struct lock *lock_truck_s_A;
+struct lock *lock_truck_c_B;
+struct lock *lock_truck_s_B;
+struct lock *lock_truck_c_C;
+struct lock *lock_truck_s_C;
+int loop_A =0;
+int loop_B =0;
+int loop_C =0;
 
 
 // function prototypes
@@ -106,8 +119,7 @@ char get_dest(unsigned long vehicledirection, unsigned long turndirection);
 void stoplight_init();
 struct lock *get_lock_1(unsigned long vehicledirection);
 struct lock *left_lock_2(unsigned long vehicledirection);
-void print_synch(const char *text);
-void print_threads_done();
+
 
 // functions
 
@@ -123,7 +135,7 @@ void print_vehicle(const char *action, unsigned long vehicledirection,
 
 	lock_acquire(lock_print);
 
-	kprintf("#: %lu, Action: %s, Type: %s, Direction: %c, Turn: %s, Dest.: %c, Location: %s\n", 
+	kprintf("\n#: %lu, Action: %s, Type: %s, Direction: %c, Turn: %s, Dest.: %c, Location: %s", 
 		vehiclenumber, action, type, direction, turn, dest, location);
 
 	lock_release(lock_print);
@@ -156,18 +168,23 @@ void stoplight_init() {
 
 	// left turn counts
 	lock_lefts = lock_create("Lock Lefts");
+	just_two = lock_create("Just Two");
 
 	// printing lock
 	lock_print = lock_create("Lock Printing");
 
 	// lock for thread completion check
 	lock_threads = lock_create("Lock Threads");
-	
-	threads_done = 0;
-	cars_A = 0;
-	cars_B = 0;
-	cars_C = 0;
-	lefts_count = 0;
+
+
+	lock_truck_c_A = lock_create("Truck Ckeck A");
+	lock_truck_s_A = lock_create("Truck Stop A");
+	lock_truck_c_B = lock_create("Truck Ckeck B");
+	lock_truck_s_B = lock_create("Truck Stop B");
+	lock_truck_c_C = lock_create("Truck Ckeck C");
+	lock_truck_s_C = lock_create("Truck Stop C");
+
+	 	
 }
 
 // Get first lock needed for left-turn from vehcledirection OR
@@ -203,21 +220,6 @@ struct lock *left_lock_2(unsigned long vehicledirection){
     }
 }
 
-// synchronized printing to terminal
-void print_synch(const char *text) {
-	lock_acquire(lock_print);
-	kprintf("%s", text);
-	lock_release(lock_print);
-}
-
-// prints number of threads currently completed
-void print_threads_done() {
-	lock_acquire(lock_print);
-	lock_acquire(lock_threads);
-	kprintf("THREADS: %d\n", threads_done);
-	lock_release(lock_threads);
-	lock_release(lock_print);
-}
 
 
 /*
@@ -258,12 +260,15 @@ turnleft(unsigned long vehicledirection,
 	(void) vehiclenumber;
 	(void) vehicletype;
 
-	// ADDED
 
 	struct lock *lock1 = get_lock_1(vehicledirection);
 	struct lock *lock2 = left_lock_2(vehicledirection);
 	struct lock *lock_cars;
+	struct lock *lock_truck_check; //(3)
+        struct lock *lock_truck_stop;  //(2)
 	int *cars_count;
+	int *in_loop;
+	int i_hold_the_lock = 0;
 
 
 	// check direction, define corresponding locks/counters
@@ -273,6 +278,9 @@ turnleft(unsigned long vehicledirection,
 		// define cars lock and counter for A
 		lock_cars = lock_cars_A;
 		cars_count = &cars_A;
+	        lock_truck_check = lock_truck_c_A;
+                lock_truck_stop =  lock_truck_s_A;
+                in_loop = &loop_A;	
 	}
 	else if (vehicledirection == 1) {
 		// from B
@@ -280,6 +288,9 @@ turnleft(unsigned long vehicledirection,
 		// define cars lock and counter for B
 		lock_cars = lock_cars_B;
 		cars_count = &cars_B;
+		lock_truck_check = lock_truck_c_B;
+                lock_truck_stop =  lock_truck_s_B;
+                in_loop = &loop_B;
 	}
 	else {
 		// from C
@@ -287,43 +298,86 @@ turnleft(unsigned long vehicledirection,
 		// define cars lock and counter for C
 		lock_cars = lock_cars_C;
 		cars_count = &cars_C;
+		lock_truck_check = lock_truck_c_C;
+                lock_truck_stop =  lock_truck_s_C;
+                in_loop = &loop_C;
 	}
 
 
-	// continue until vehicle enters intersection and completes route
-	int has_entered = 0;
-	while(has_entered == 0) {
-		//print_synch("LEFT\n");
-		// check if able to enter		
+	//****** Truck/car check priority to cars ******//
+
+	lock_acquire(lock_cars);
+        if(vehicletype == 0)
+                (*cars_count)++;  // cars count, trucks sholud yield in presence of cars
+
+	lock_release(lock_cars);
+
+        lock_acquire(lock_truck_check);   // truck/car check begins 
+
+        if(vehicletype==0){
+                lock_release(lock_truck_check);  //It's a car! It can continue to intersection 
+
+	}else{ // It's a truck, it must wait if cars are present
+               int second = 0;
+               if(*in_loop ){// a truck is in the loop that means cars are present the truck will be lock, it must release the truck/car check point 
+                        second = 1;
+                        lock_release(lock_truck_check); // release of truck/car check                       
+               }
+
+                lock_acquire(lock_truck_stop);// truck stop if cars are present 
+
+                if(second)
+                          lock_acquire(lock_truck_check);
+
+                int not_first = 0;
+
+                while(1){// one truck loops until cars are no longer present  
+
+                         *in_loop = 1;
+
+                         if(not_first)
+                                lock_acquire(lock_truck_check);//
+
+                         lock_acquire(lock_cars); // 
+
+                         if(*cars_count == 0){// no cars present truck can continue
+                                *in_loop =0;
+                                break;
+                        }
+                        
+                        lock_release(lock_cars); // 
+                        lock_release(lock_truck_check);//
+                        not_first = 1;
+                }
+                lock_release(lock_cars); //
+                lock_release(lock_truck_stop);//
+                lock_release(lock_truck_check);//
+        }
+
+
+ //*********** This avoid a 3-way deadlock, only two threads or less allowed to procede at the same time **********//
+
+	lock_acquire(lock_lefts);//A
+		lefts_count++;
+
+	if(no_check){// this thread gets to procede if it is the first tread or if the previous thread that got to procede without a lock has exited
+           	no_check = 0;
+	  
+	}else if(lefts_count == 2 ){
+		lock_acquire(just_two); // thread allowed in with lock
+		i_hold_the_lock =1;
+	}else if (lefts_count > 2 ){ // thread will be stop on lock
+		lock_release(lock_lefts);
+                lock_acquire(just_two); /////////////////////////////////
+		i_hold_the_lock  =1;
 		lock_acquire(lock_lefts);
-		lock_acquire(lock_cars);
-		if(lefts_count>=2 || !(vehicletype==0 || (*cars_count)==0)) {
-			// retry
-			lock_release(lock_cars);
-			lock_release(lock_lefts);
-	
-			/*lock_acquire(lock_print);
-			kprintf("DEBUG -- lefts=%d, type=%lu, cars=%d\n", lefts_count, vehicletype, 
-				*cars_count);
-			lock_release(lock_print);*/
+	} 
 
-			//thread_yield();
-			continue;
-		}
-		else {
-			// success
-			if(vehicletype==0) {
-				(*cars_count)++;
-			}
-			lefts_count++;
+	lock_release(lock_lefts);//R
 
-			lock_release(lock_cars);
-			lock_release(lock_lefts);
-		}
+//****************************************************************************//
 
-
-		// entered intersection
-		// wait on required locks
+		//*********** wait on intersection ************//
 
 		// enter first section
 		lock_acquire(lock1);
@@ -331,39 +385,44 @@ turnleft(unsigned long vehicledirection,
 		print_vehicle("Entered", vehicledirection,
    			vehiclenumber, vehicletype, 0, lock1->name);
 
-		lock_release(lock1);
-		
+	//	lock_release(lock1);// I think this has to be inside lock2
+
 		// enter second section
 		lock_acquire(lock2);
+		lock_release(lock1);// here
 		print_vehicle("Entered", vehicledirection,
-            vehiclenumber, vehicletype, 0, lock2->name);
-		lock_release(lock2);
+            vehiclenumber, vehicletype, 0, lock2->name);	
 
+		lock_acquire(lock_lefts);
+		lefts_count--;
+
+               
+		if(i_hold_the_lock){
+			lock_release(just_two);// allow another thread in from the lock if any
+		}else{
+           		no_check = 1; //allows a second thread in without lock
+		}
+
+		lock_release(lock_lefts);
+
+		lock_release(lock2);
 
 		// leaves
 		char dest[] = {get_dest(vehicledirection, 0), '\0'};
 
-		//kprintf("\nDEST: %s\n", dest);
-
 		print_vehicle("Exited", vehicledirection,
             vehiclenumber, vehicletype, 0, dest);
 
-
 		// decrease counts
-		lock_acquire(lock_lefts);
-		lock_acquire(lock_cars);
-
-		if(vehicletype==0) {
+		if(vehicletype==0){
+			lock_acquire(lock_cars);
 			(*cars_count)--;
+			lock_release(lock_cars);
 		}
-		lefts_count--;
-
-		lock_release(lock_cars);
-		lock_release(lock_lefts);
-
-		// success, exit loop
-		has_entered = 1;
-	}
+	lock_acquire(lock_threads);
+        threads_done++;
+        lock_release(lock_threads);
+	
 }
 
 
@@ -404,58 +463,103 @@ turnright(unsigned long vehicledirection,
 	
 	struct lock *lock1 = get_lock_1(vehicledirection);
 	struct lock *lock_cars;
+	struct lock *lock_truck_check; //(3)
+	struct lock *lock_truck_stop;  //(2)
 	int *cars_count;
+	int *in_loop;
 
-	// get cars lock and counter for direction	
+	// get cars/truck lock and counter for direction	
 	if(vehicledirection == 0) {
 		// from A	
 
 		lock_cars = lock_cars_A;
 		cars_count = &cars_A;
+		lock_truck_check = lock_truck_c_A;
+		lock_truck_stop =  lock_truck_s_A;
+		in_loop = &loop_A;
 	}
 	if(vehicledirection == 1) {
     	// from B
 	 
 		lock_cars = lock_cars_B;
-      	cars_count = &cars_B;
+      		cars_count = &cars_B;
+		lock_truck_check = lock_truck_c_B;
+                lock_truck_stop =  lock_truck_s_B;
+		in_loop = &loop_B;
     }
 	else {
     	// from C 
 	
 	 	lock_cars = lock_cars_C;
-        cars_count = &cars_C;
+        	cars_count = &cars_C;
+		lock_truck_check = lock_truck_c_C;
+                lock_truck_stop =  lock_truck_s_C;
+		in_loop = &loop_C;
     }
 
 
-	int has_entered = 0;
-	while(has_entered == 0) {
-		//print_synch("RIGHT\n");
-		// check if able to enter		
-		lock_acquire(lock_cars);
-		if(!(vehicletype==0 || (*cars_count)==0)) {
-			// retry
-						
-			lock_release(lock_cars);
-			
-			//thread_yield();
-			continue;
+
+    //****** Truck/car check priority to cars ******//
+	
+         lock_acquire(lock_cars);                
+         if(vehicletype == 0) 
+		(*cars_count)++;  // cars count, trucks sholud yield in presence of cars
+
+	 lock_release(lock_cars);
+	
+  	lock_acquire(lock_truck_check);   // truck/car check begins 
+
+	if(vehicletype==0){ 
+		lock_release(lock_truck_check);  //It's a car! It can continue to intersection 
+
+	}else{ // It's a truck, it must wait if cars are present
+               int second = 0;
+               if(*in_loop ){// a truck is in the loop that means cars are present the truck will be lock, it must release the truck/car check point 
+			second = 1;
+			lock_release(lock_truck_check); // release of truck/car check                       
+               }
+
+   		lock_acquire(lock_truck_stop);// truck stop if cars are present 
+                
+		if(second)      
+                          lock_acquire(lock_truck_check);  
+                
+ 		int not_first = 0;
+
+ 		while(1){// one truck loops until cars are no longer present  
+         
+                        *in_loop = 1;   
+
+  			if(not_first)
+             			lock_acquire(lock_truck_check);//
+
+			lock_acquire(lock_cars); // 
+		         
+			if(*cars_count == 0){// no cars prenet truck can continue
+				*in_loop =0;	
+				break; 	
+			}
+
+			lock_release(lock_cars); // 
+                	lock_release(lock_truck_check);//
+			not_first = 1;
+                        
+
 		}
-		else {
-			// success
+		lock_release(lock_cars); //
+		lock_release(lock_truck_stop);//
+		lock_release(lock_truck_check);//
+	
+	}  
 		
-			if(vehicletype==0) (*cars_count)++;	
-			lock_release(lock_cars);
-		}
-		
-		
-		// wait on section
+		//******** wait on intersection ***********//
 		lock_acquire(lock1);
 
 		// decrease cars_count at direction if car
 		if(vehicletype == 0) { 
 			lock_acquire(lock_cars);
-        	(*cars_count)--;
-        	lock_release(lock_cars);
+        		(*cars_count)--;
+        		lock_release(lock_cars);
 		}
 	
 		print_vehicle("Entered", vehicledirection,
@@ -465,15 +569,16 @@ turnright(unsigned long vehicledirection,
 
 		// leaves
 		char dest[] = {get_dest(vehicledirection, 1), '\0'};
-        
-		//kprintf("\nDEST: %s\n", dest);
 
 		print_vehicle("Exited", vehicledirection,
             vehiclenumber, vehicletype, 1, dest);
-			
-		// success, exit loop
-		has_entered = 1;
-	}
+
+	lock_acquire(lock_threads);
+        threads_done++;
+        lock_release(lock_threads);
+
+
+			 
 }
 
 
@@ -517,18 +622,17 @@ approachintersection(void * unusedpointer,
 	 * vehicledirection is set randomly.
 	 */
 
+
 	vehicledirection = random() % 3;
 	turndirection = random() % 2;
 	vehicletype = random() % 2;
 	
-
 	
-	// NOT RANDOM
-	//vehicledirection = 0;// random() % 3;
-	//turndirection = 0;// random() % 2;
-	//vehicletype = 0;//random() % 2;
-	
-
+/*	// NOT RANDOM
+	vehicledirection = random() % 3;// 
+	turndirection = 0;// random() % 2;
+	vehicletype = random() % 2;
+*/
 	// ADDED
 
 	char start[] = {car_directions[vehicledirection], '\0'};
@@ -543,21 +647,10 @@ approachintersection(void * unusedpointer,
 		// turn right
 		turnright(vehicledirection, vehiclenumber, vehicletype);
 	}
-	
-	// thread done, increment count
-	lock_acquire(lock_threads);
-	threads_done++;
-	lock_release(lock_threads);
 
-	print_threads_done();
-
-	// wait for all threads to finish
-	/*while(1) {
-		lock_acquire(lock_threads);
-		if(threads_done >= NVEHICLES)
-			break;
-		lock_release(lock_threads);
-	}*/
+		
+        if (threads_done == NVEHICLES)
+                kprintf("\n\nIntercestion is empty!!! Test completed.\n\n");                  
 }
 
 
@@ -585,8 +678,7 @@ createvehicles(int nargs,
 	// Added
 	
 	stoplight_init();
-	
-	// Added
+	threads_done = 0;
 
 
 	/*
@@ -619,43 +711,42 @@ createvehicles(int nargs,
 					strerror(error)
 				 );
 		}
-	}
 
-	// ADDED
+	}               
 
-	// wait for all threads to finish
-	while(1) {
-		print_synch("COMPLETION CHECK\n");
-		print_threads_done();	
-	
-		lock_acquire(lock_threads);
-		if(threads_done >= NVEHICLES) {
-			lock_release(lock_threads);
-			break;
-		}
-		lock_release(lock_threads);
 
-		print_synch("NOT COMPLETED\n");
-	}
+	while(1) {// avoids premature ending of thread
+               
 
-	
+                lock_acquire(lock_threads);
+                if(threads_done == NVEHICLES) {
+                        lock_release(lock_threads);
+                        break;
+                }
+                lock_release(lock_threads);
+
+        }
+
 	// destroy locks
-	/*lock_destroy(lock_AB);
-	lock_destroy(lock_BC);
-	lock_destroy(lock_CA);	
-	lock_destroy(lock_cars_A);
-	lock_destroy(lock_cars_B);
-	lock_destroy(lock_cars_C);
-	lock_destroy(lock_lefts);*/
-
+		lock_destroy(lock_AB);
+		lock_destroy(lock_BC);
+		lock_destroy(lock_CA);  
+		lock_destroy(lock_cars_A);
+		lock_destroy(lock_cars_B);
+		lock_destroy(lock_cars_C);
+		lock_destroy(lock_lefts);
+		lock_destroy(lock_truck_c_A);
+		lock_destroy(lock_truck_s_A);
+		lock_destroy(lock_truck_c_B);
+		lock_destroy(lock_truck_s_B);
+		lock_destroy(lock_truck_c_C);
+		lock_destroy(lock_truck_s_C);
+		lock_destroy(lock_threads);
+		lock_destroy(just_two);
+		lock_destroy(lock_print);
 
 	return 0;
 }
-
-
-
-
-
 
 
 
