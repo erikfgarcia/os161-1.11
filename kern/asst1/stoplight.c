@@ -135,7 +135,7 @@ void print_vehicle(const char *action, unsigned long vehicledirection,
 
 	lock_acquire(lock_print);
 
-	kprintf("\n#: %lu, Action: %s, Type: %s, Direction: %c, Turn: %s, Dest.: %c, Location: %s", 
+	kprintf("\n#: %-2lu  Action: %-10s  Type: %-5s  Direction: %-1c  Turn: %-5s  Dest.: %-1c  Location: %-2s", 
 		vehiclenumber, action, type, direction, turn, dest, location);
 
 	lock_release(lock_print);
@@ -650,7 +650,7 @@ approachintersection(void * unusedpointer,
 
 		
         if (threads_done == NVEHICLES)
-                kprintf("\n\nIntercestion is empty!!! Test completed.\n\n");                  
+                kprintf("\n\nIntersection is empty!!! Test completed.\n\n");                  
 }
 
 
