@@ -98,7 +98,7 @@ load_elf(struct vnode *v, vaddr_t *entrypoint)
 	 * Read the executable header from offset 0 in the file.
 	 */
 
-	mk_kuio(&ku, &eh, sizeof(eh), 0, UIO_READ);
+	mk_kuio(&ku, &eh, sizeof(eh), 0, UIO_READ); // set uio for I/O from a kernel buffer erik
 	result = VOP_READ(v, &ku);
 	if (result) {
 		return result;
@@ -174,7 +174,7 @@ load_elf(struct vnode *v, vaddr_t *entrypoint)
 				ph.p_type);
 			return ENOEXEC;
 		}
-
+// set up a region of memory within the address space (erik) not implemented
 		result = as_define_region(curthread->t_vmspace,
 					  ph.p_vaddr, ph.p_memsz,
 					  ph.p_flags & PF_R,
@@ -184,7 +184,7 @@ load_elf(struct vnode *v, vaddr_t *entrypoint)
 			return result;
 		}
 	}
-
+//this is called before actually loading from an executable into the address space. not inplemeted 
 	result = as_prepare_load(curthread->t_vmspace);
 	if (result) {
 		return result;
@@ -227,7 +227,7 @@ load_elf(struct vnode *v, vaddr_t *entrypoint)
 			return result;
 		}
 	}
-
+//erik not implemeted this is called when loading from an executable is complete
 	result = as_complete_load(curthread->t_vmspace);
 	if (result) {
 		return result;
