@@ -1,3 +1,17 @@
+
+#include <types.h>
+#include <kern/unistd.h>
+#include <kern/errno.h>
+#include <lib.h>
+#include <addrspace.h>
+#include <thread.h>
+#include <curthread.h>
+#include <vm.h>
+#include <vfs.h>
+#include <test.h>
+#include <pid.h>
+
+
 /*
 
 
@@ -11,3 +25,29 @@ parent has already terminated).
 
 
 */
+
+
+// return parent PID for current process
+pid_t getppid() {
+	// get parent thread (process), return its PID
+	//return curthread->parent->pid
+	
+	// check if parent has exited and exists
+	// return PID if not exited, else -1
+	if(curthread->parent == NULL) {
+		// parent does not exist
+		return -1;
+	}
+	else if(curthread->parent->exit_status != NULL) {
+		// parent exited
+		return -1;
+	}
+	else {
+		// parent exists and has not exited
+		return curthread->parent->pid;
+	}
+}
+
+
+
+
