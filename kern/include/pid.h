@@ -1,7 +1,7 @@
 #ifndef _PID_H_
 #define _PID_H_
 
-#define MIN_PID 100 //the minimum pid **MUST BE GREATER THAN THE NUMBER OF ERROR CODES**
+#define MIN_PID 100 //the minimum pid 
 
 #include <types.h>
 
