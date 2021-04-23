@@ -1,4 +1,20 @@
 
+
+#include <machine/spl.h>
+#include <kern/unistd.h>
+#include <pid.h>
+#include <children.h>
+#include <thread.h>
+#include <curthread.h>
+#include <vm.h>
+#include <kern/errno.h>
+#include <lib.h>
+#include <addrspace.h>
+
+#include <types.h>
+
+
+
 /*
 
 waitpid
@@ -89,5 +105,80 @@ this code is not defined in the OS/161 base system.
 
 */
 
+
+int sys_waitpid(pid_t pid, int *status, int options) {
+    
+  //error checking 
+    
+    //The status argument was an invalid pointer.
+/*    if (as_valid_write_addr(curthread->t_vmspace, (vaddr_t *) status) == 0) {
+        return EFAULT;
+    }*/
+
+         //misaligned memory address
+    if (((int) status) % 4 != 0) {
+                return EFAULT;
+    }
+     
+ 
+    int spl = splhigh();
+  	
+	//inalid or unsupported options
+      if (options != 0) {
+          splx(spl);
+          return EINVAL;    
+    }
+    
+	//alomst all error cheking passed
+
+    struct children * child = NULL;
+    struct children *p;
+    
+ // let's check the pid provided
+    for (p = curthread->children; p != NULL; p = p->next) {
+        if (p->pid == pid) {//is valid 
+            child = p;
+            break;
+        }
+    }
+    
+    if (child == NULL) { // this process does not have this pid as child or the pid is not in use
   
-        
+        splx(spl);
+        if (pid_claimed(pid)) {
+            return EINVAL;//   pid is not in use
+        } else {
+            return EINVAL; //not a valid pid
+        }
+    }
+    
+    while (child->finished == 0) {// parent waits for child 
+        thread_sleep((void *) pid);
+    }
+    
+    *status = child->exit_code;
+    
+    //now, remove the child from children list since it has exited and it's pid is no longer needed
+    if (curthread->children->pid == pid) {
+        struct children *temp = curthread->children;
+        curthread->children = curthread->children->next;
+        kfree(temp);
+    } else {
+        for (p = curthread->children;; p = p->next) {
+            assert(p->next != NULL);
+            if (p->next->pid == pid) {
+                struct children *temp = p->next;
+                p->next = p->next->next;
+                kfree(temp);
+                break;
+            }
+        }
+    }
+    
+    pid_parent_done(pid);
+    splx(spl);
+    
+    return pid;
+}
+
+

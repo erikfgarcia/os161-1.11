@@ -304,6 +304,9 @@ thread.o: ../../thread/thread.c ../../include/types.h machine/types.h \
   ../../include/curthread.h ../../include/scheduler.h \
   ../../include/addrspace.h ../../include/vm.h machine/vm.h opt-dumbvm.h \
   ../../include/vnode.h opt-synchprobs.h
+pid.o: ../../thread/pid.c ../../include/types.h machine/types.h \
+  ../../include/kern/types.h machine/ktypes.h ../../include/lib.h \
+  machine/setjmp.h ../../include/pid.h machine/spl.h
 main.o: ../../main/main.c ../../include/types.h machine/types.h \
   ../../include/kern/types.h machine/ktypes.h ../../include/kern/errno.h \
   ../../include/kern/unistd.h ../../include/lib.h machine/setjmp.h \
@@ -342,7 +345,13 @@ uio.o: ../../userprog/uio.c ../../include/types.h machine/types.h \
   machine/setjmp.h ../../include/uio.h ../../include/thread.h \
   machine/pcb.h ../../include/children.h ../../include/pid.h \
   ../../include/synch.h ../../include/curthread.h
-waitpid.o: ../../userprog/waitpid.c
+waitpid.o: ../../userprog/waitpid.c machine/spl.h \
+  ../../include/kern/unistd.h ../../include/pid.h ../../include/types.h \
+  machine/types.h ../../include/kern/types.h machine/ktypes.h \
+  ../../include/children.h ../../include/thread.h machine/pcb.h \
+  machine/setjmp.h ../../include/synch.h ../../include/curthread.h \
+  ../../include/vm.h machine/vm.h ../../include/kern/errno.h \
+  ../../include/lib.h ../../include/addrspace.h opt-dumbvm.h
 exit.o: ../../userprog/exit.c ../../include/types.h machine/types.h \
   ../../include/kern/types.h machine/ktypes.h ../../include/kern/errno.h \
   ../../include/kern/unistd.h ../../include/thread.h machine/pcb.h \

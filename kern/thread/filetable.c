@@ -1,5 +1,5 @@
 /*
- * Filetables for the thread. See filetable.h for details.
+ * filetables for the thread. See filetable.h for details.
  */
 
 #include <types.h>
@@ -14,7 +14,7 @@
 #include <vnode.h>
 #include <filetable.h>
 /*
- * ft_create()
+ * 
  * Creates a file table that is attached to the thread library.
  * 
  */
@@ -42,7 +42,7 @@ struct filetable *ft_create() {
 }
 
 /*
- * ft_attachstds()
+ * 
  * Attach the standard in, out, err to the file table, this can't be located the
  * ft_create function because that the device "con:" etc are not attached to the
  * list of device when the os is the boot sequence.
@@ -121,7 +121,7 @@ int ft_attachstds(struct filetable *ft) {
 }
 
 /*
- * ft_array_size()
+ * 
  * This returns how big the array of the file descriptor is, this **DOES NOT**
  * tell you how many file descriptors are opened to the thread.
  */
@@ -131,7 +131,6 @@ int ft_array_size(struct filetable *ft) {
 }
 
 /*
- * ft_size()
  * This returns how many file descriptors are opened to the thread.
  */
 int ft_size(struct filetable *ft) {
@@ -147,7 +146,7 @@ int ft_size(struct filetable *ft) {
 }
 
 /*
- * ft_get()
+ * 
  * This gets the file descriptor from a file table and the given file descriptor id.
  */
 struct filedescriptor *ft_get(struct filetable *ft, int fti) {
@@ -181,7 +180,7 @@ int ft_set(struct filetable* ft, struct filedescriptor* fd, int fti) {
 }
 
 /*
- * ft_add()
+ * 
  * This adds the file descriptor to the file table, it does by checking if there
  * is a free file descriptor in the queue, if not, it will add to the end of the
  * array. This will recover and reuse closed file descriptor ids.
@@ -206,8 +205,7 @@ int ft_add(struct filetable* ft, struct filedescriptor* fd) {
 }
 
 /*
- * ft_remove()
- * This removes the file descriptor from the file table, it will add the file
+ * * This removes the file descriptor from the file table, it will add the file
  * descriptor id to the queue of availiable ids to use.
  */
 int ft_remove(struct filetable* ft, int fti) {
@@ -227,7 +225,7 @@ int ft_remove(struct filetable* ft, int fti) {
 }
 
 /*
- * ft_destroy()
+ * 
  * This will close and destroy all file descriptors in the file table. Should
  * only be called when the thread is exiting. In theory there shouldn't be
  * anything in here, except the stds, if they are attached to the thread.
@@ -242,7 +240,7 @@ int ft_destroy(struct filetable* ft) {
 }
 
 /*
- * ft_test()
+ * 
  * This tests the implementation of the file table, insertion, deletion, fd recovery.
  * This test is not passable, it will crash the kernel.
  */
@@ -264,7 +262,7 @@ void ft_test_list(struct filetable* ft) {
 }
 
 /*
- * ft_test()
+ * 
  * This tests the implementation of the file table, insertion, deletion, fd recovery.
  * This test is not passable, it will crash the kernel.
  */

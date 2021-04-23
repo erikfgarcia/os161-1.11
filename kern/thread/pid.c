@@ -1,6 +1,5 @@
 /*
-This file contains the methods used for assigning process IDs to new threads and
-freeing these IDs for re-use when the thread exits. These operations are atomic.
+
 */
 
 #include <types.h>
@@ -30,12 +29,12 @@ struct pid_list *recycled_pids;
 struct pid_clist *unavailable_pids;
 
 /*
-Find a pid for a new process
+find a pid for a new process
 */
 pid_t new_pid() {
     int spl = splhigh();
     if (recycled_pids == NULL) {
-        assert(unused_pids < 0x7FFFFFFF); //can't even happen with sys161's available memory
+        assert(unused_pids < 0x7FFFFFFF); //
         struct pid_clist *new_entry = kmalloc(sizeof(struct pid_clist));
         new_entry->pid = unused_pids;
         new_entry->status = PID_NEW;
@@ -67,7 +66,7 @@ void pid_change_status(pid_t x, int and_mask) {
     assert(unavailable_pids != NULL);
     if (unavailable_pids->pid == x) {
         unavailable_pids->status &= and_mask;
-        DEBUG(DB_PID, "PID #%d: new status is %d\n", (int) x, unavailable_pids->status);
+
         if (unavailable_pids->status == PID_FREE) {
             //add pid to recycled_pids list
             struct pid_list *new_entry = kmalloc(sizeof(struct pid_list));
@@ -107,16 +106,17 @@ void pid_change_status(pid_t x, int and_mask) {
 }
 
 /*
-Changes a pid's status to indicate that process's parent has exited, so the pid
-does not need to be saved after the process exits. Frees the pid it if can be recycled
+changes a pid's status, indicates that the process's parent has exited,
+the pid does not need to be saved after the process exits. 
+it if can be recycled
 */
 void pid_parent_done(pid_t x) {
     pid_change_status(x, PID_PARENT);
 }
 
 /*
-Changes a pid's status to indicate that the process with that pid has closed,
-freeing it if it can be recycled
+changes a pid's status to indicate that the process with that pid has exited,
+ it can be recycled
 */
 void pid_process_exit(pid_t x) {
     pid_change_status(x, PID_EXITED);
@@ -131,8 +131,8 @@ void pid_free(pid_t x) {
 
 
 /*
-checks weather or not a PID is in use. This is only used when an invalid PID
-is used in waitpid to determine weather we should give error EINVAL or ESRCH
+checks if pid is in use.only used when an invalid pid
+
 */
 int pid_claimed(pid_t x) {
     int spl = splhigh();
