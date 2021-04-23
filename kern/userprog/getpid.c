@@ -1,3 +1,18 @@
+
+
+#include <types.h>
+#include <kern/unistd.h>
+#include <kern/errno.h>
+#include <lib.h>
+#include <addrspace.h>
+#include <thread.h>
+#include <curthread.h>
+#include <vm.h>
+#include <vfs.h>
+#include <test.h>
+
+
+
 /*
 getpid
 
@@ -25,3 +40,12 @@ Errors
 
 getpid does not fail
 */
+
+
+// return pid of current process
+pid_t sys_getpid() {
+	// return pid of current thread (process)
+	return curthread->pid;
+}
+
+
