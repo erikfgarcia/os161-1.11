@@ -13,6 +13,7 @@
 #include <addrspace.h>
 #include <vnode.h>
 #include "opt-synchprobs.h"
+#include <children.h>
 
 /* States a thread can be in. */
 typedef enum {
@@ -63,7 +64,13 @@ thread_create(const char *name)
 	
 	// If you add things to the thread structure, be sure to initialize
 	// them here.
-	
+
+	thread->pid = 9; //new_pid(); needs pid
+	thread->parent = NULL;
+	thread->children = NULL;
+	thread->exit_status = -1; //will be changed if _exit() is called
+//        thread->ft = NULL; //ft_create(); needs file
+///////////////////////////////////////////////////////////////////////////////////////////////////////////	
 	return thread;
 }
 
@@ -91,7 +98,41 @@ thread_destroy(struct thread *thread)
 	if (thread->t_stack) {
 		kfree(thread->t_stack);
 	}
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+        struct children *p;
+	for (p = thread->children; p != NULL;) {
+	    struct children *temp = p;
+	   // pid_parent_done(p->pid);
+	    p = p->next;
+	    kfree(temp);
+	}
+	int pid_update_success = 0;
+	int spl = splhigh();
+	if (thread->parent != NULL) {
+        for (p = thread->parent->children; p != NULL;) {
+            if (p->pid == thread->pid) {
+                pid_update_success = 1;
+                p->finished = 1;
+                p->exit_code = thread->exit_status;
+                p = NULL; //won't let me use break in a for loop, so I'll do this instead
+            } else {
+                p = p->next;
+            }
+        }
+        assert(pid_update_success);
+       // pid_process_exit(thread->pid);
+	} else {
+	 //   pid_free(thread->pid);
+	}
+	splx(spl);
+	
+//	assert(thread->ft != NULL);
+//	ft_destroy(thread->ft);
+	
+	thread_wakeup((void *) thread->pid);
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
 	kfree(thread->t_name);
 	kfree(thread);
 }
@@ -170,6 +211,26 @@ thread_panic(void)
 	thread_killall();
 	scheduler_killall();
 }
+
+////////////////////////////////////
+
+
+/*
+ *  */
+
+
+int
+one_thread_only() {
+  int s;
+  int n;
+  
+  s = splhigh();
+  n = numthreads;
+  splx(s);
+  return(n==1);
+}
+
+///////////////////////////////////////////////////
 
 /*
  * Thread initialization.

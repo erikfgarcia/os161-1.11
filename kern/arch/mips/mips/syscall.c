@@ -50,6 +50,9 @@ mips_syscall(struct trapframe *tf)
 {
 	DEBUG(DB_SYSCALL, "Mips system call\n");	
 
+	//Added To handle the calls to “write()”
+	unsigned int i;
+	
 	int callno;
 	int32_t retval;
 	int err;
@@ -75,7 +78,12 @@ mips_syscall(struct trapframe *tf)
 		break;
 
 	    /* Add stuff here */
- 
+           case SYS_write:
+                for (i = 0; i < (size_t) tf->tf_a2; ++i) {
+                          kprintf("%c", ((char *) tf->tf_a1)[i]);
+          	}
+         	break;
+
 	    default:
 		kprintf("Unknown syscall %d\n", callno);
 		err = ENOSYS;

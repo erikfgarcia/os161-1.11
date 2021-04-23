@@ -8,6 +8,12 @@
 /* Get machine-dependent stuff */
 #include <machine/pcb.h>
 
+/////////////////////////
+#include <types.h>
+#include <children.h>
+#include <synch.h>
+/////////////////////////
+
 
 struct addrspace;
 
@@ -30,6 +36,20 @@ struct thread {
 	 * and will need to be manipulated by the userprog and/or vm
 	 * code.
 	 */
+
+/////////////////////////////////////////////
+	pid_t pid;
+	struct thread *parent;
+	struct children *children;
+	int exit_status;
+	
+	/* This is the filetable for the thread.*/
+	 //struct filetable *ft;
+
+/////////////////////////////////////////////////////
+
+
+
 	struct addrspace *t_vmspace;
 
 	/*
@@ -95,6 +115,12 @@ void thread_wakeup(const void *addr);
  * address. Meant only for diagnostic purposes.
  */
 int thread_hassleepers(const void *addr);
+
+//////////////////////////////
+int one_thread_only(void);
+////////////////////////////////////
+
+
 
 
 /*
