@@ -43,7 +43,7 @@ pid_t new_pid() {
         unavailable_pids = new_entry;
         unused_pids += 1;
         splx(spl);
-//        DEBUG(DB_PID, "A thread has been assigned PID #%d\n", unused_pids-1);
+
         return (unused_pids - 1);
     } else {
         struct pid_list *first = recycled_pids;
@@ -55,7 +55,7 @@ pid_t new_pid() {
         unavailable_pids = new_entry;
         kfree(first);
         splx(spl);
-  //      DEBUG(DB_PID, "A thread has been assigned PID #%d\n", (int) new_entry->pid);
+ 
         return (new_entry->pid);
     }
 }
@@ -63,7 +63,7 @@ pid_t new_pid() {
 //"private" function
 void pid_change_status(pid_t x, int and_mask) {
     int spl = splhigh();
-   // DEBUG(DB_PID, "PID #%d: change status %d\n", (int) x, and_mask);
+ 
     assert(unavailable_pids != NULL);
     if (unavailable_pids->pid == x) {
         unavailable_pids->status &= and_mask;
@@ -78,7 +78,7 @@ void pid_change_status(pid_t x, int and_mask) {
             struct pid_clist *temp = unavailable_pids;
             unavailable_pids = unavailable_pids->next;
             kfree(temp);
-     //       DEBUG(DB_PID, "PID #%d: free for re-use\n", (int) x);
+ 
         }
     } else {
         int found = 0;
@@ -87,8 +87,7 @@ void pid_change_status(pid_t x, int and_mask) {
             if (p->next->pid == x) {
                 found = 1;
                 p->next->status &= and_mask;
-       //         DEBUG(DB_PID, "PID #%d: new status is %d\n", (int) x, p->next->status);
-                if (p->next->status == PID_FREE) {
+                      if (p->next->status == PID_FREE) {
                     //add pid to recycled_pids list
                     struct pid_list *new_entry = kmalloc(sizeof(struct pid_list));
                     new_entry->pid = x;
@@ -98,8 +97,7 @@ void pid_change_status(pid_t x, int and_mask) {
                     struct pid_clist *temp = p->next;
                     p->next = p->next->next;
                     kfree(temp);
-         //           DEBUG(DB_PID, "PID #%d: free for re-use\n", (int) x);
-                }
+                         }
             }
             p = p->next;
         }
