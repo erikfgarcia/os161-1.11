@@ -149,8 +149,8 @@ int sys_waitpid(pid_t pid, int *status, int options) {
         }
     }
     
-    while (child->finished == 0) {// parent waits for child 
-        thread_sleep((void *) pid);
+    while (child->finished == 0) {// parent waits for child       
+	thread_sleep(curthread);	
     }
 
 //return its exit code in the integer pointed to by status   

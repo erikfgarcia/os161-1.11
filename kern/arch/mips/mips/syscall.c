@@ -172,6 +172,7 @@ md_forkentry(struct trapframe *tf)
        // trapfr.tf_status = CST_IRQMASK | CST_IEp | CST_KUp; //not sure if this is necessary
     	child_trapfr.tf_epc += 4; //ncrement tf_epc by 4 (otherwise fork() gets invoke again)
 				//Copy the passed address space to te current process adress space and activate it
+ 
       	mips_usermode(&child_trapfr);// give caontrol back to the usermode : call mipd_usermode() and pass the newlly created child trapframe
             assert(0);
 

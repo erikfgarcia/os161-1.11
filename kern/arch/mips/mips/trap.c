@@ -46,7 +46,7 @@ kill_curthread(u_int32_t epc, unsigned code, u_int32_t vaddr)
 		code, trapcodenames[code], epc, vaddr);
 
 
-    if(curthread->exit_status != NULL)
+  //  if(curthread->exit_status != NULL)
 		curthread->exit_status = EFAULT;
 
 

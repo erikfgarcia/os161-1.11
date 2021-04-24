@@ -113,10 +113,10 @@ pid_t sys_fork(struct trapframe *tf){
         return ENOMEM;
     }
  
- //copy the trapframe of the parent  
- // copy the address space of the parent
+// we do not need to create a pid here because is created when the new thread is created in thread.c
+//copy the trapframe of the parent  
+//copy the address space of the parent
 
-// this helps 
 
 /*
  * * Create a new thread based on an existing one.
@@ -128,7 +128,7 @@ pid_t sys_fork(struct trapframe *tf){
 int  thread_fork(const char *name,  void *data1, unsigned long data2,    void (*func)(void *, unsigned long),  struct thread **ret)
  */
 
-//void  md_forkentry(struct trapframe *tf)
+//void  md_forkentry(struct trapframe *tf) this has to be mofied so 
    
 
      struct thread *child = NULL;
@@ -143,8 +143,7 @@ int  thread_fork(const char *name,  void *data1, unsigned long data2,    void (*
         return result;
     }  
 
-
-   ; 
+    
     child->parent = curthread;
     //add new process to list of children
     new_child->pid = child->pid;
