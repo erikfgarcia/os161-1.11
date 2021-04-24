@@ -366,7 +366,6 @@ file      thread/synch.c
 file      thread/scheduler.c
 file      thread/thread.c
 file      thread/pid.c
-
 #
 # Main/toplevel stuff
 #
@@ -383,10 +382,10 @@ file      main/menu.c
 file      userprog/loadelf.c
 file      userprog/runprogram.c
 file      userprog/uio.c
-#file      userprog/getpid.c
-#file      userprog/getppid.c
-#file      userprog/fork.c
-#file      userprog/execv.c
+file      userprog/getpid.c
+file      userprog/getppid.c
+file      userprog/fork.c
+file      userprog/execv.c
 file      userprog/waitpid.c
 file      userprog/exit.c
 

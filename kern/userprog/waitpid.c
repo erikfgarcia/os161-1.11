@@ -111,9 +111,6 @@ int sys_waitpid(pid_t pid, int *status, int options) {
   //error checking 
     
     //The status argument was an invalid pointer.
-/*    if (as_valid_write_addr(curthread->t_vmspace, (vaddr_t *) status) == 0) {
-        return EFAULT;
-    }*/
 
          //misaligned memory address
     if (((int) status) % 4 != 0) {
@@ -136,13 +133,13 @@ int sys_waitpid(pid_t pid, int *status, int options) {
     
  // let's check the pid provided
     for (p = curthread->children; p != NULL; p = p->next) {
-        if (p->pid == pid) {//is valid 
+        if (p->pid == pid) {//is valid  this process has a reason to be interested 
             child = p;
             break;
         }
     }
     
-    if (child == NULL) { // this process does not have this pid as child or the pid is not in use
+    if (child == NULL) { // this process does not have this pid as child (you shoul not be interested) or the pid is not in use
   
         splx(spl);
         if (pid_claimed(pid)) {
@@ -155,10 +152,12 @@ int sys_waitpid(pid_t pid, int *status, int options) {
     while (child->finished == 0) {// parent waits for child 
         thread_sleep((void *) pid);
     }
-    
+
+//return its exit code in the integer pointed to by status   
+ 
     *status = child->exit_code;
     
-    //now, remove the child from children list since it has exited and it's pid is no longer needed
+    //remove the child from children list since it has exited and it's pid is no longer needed
     if (curthread->children->pid == pid) {
         struct children *temp = curthread->children;
         curthread->children = curthread->children->next;

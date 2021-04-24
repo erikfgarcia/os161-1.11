@@ -8,7 +8,8 @@
 #include <thread.h>
 #include <curthread.h>
 #include<syscall.h>
-
+//added
+#include <kern/errno.h> //see this file to set the status code include/kernel
 
 extern u_int32_t curkstack;
 
@@ -44,9 +45,17 @@ kill_curthread(u_int32_t epc, unsigned code, u_int32_t vaddr)
 	kprintf("Fatal user mode trap %u (%s, epc 0x%x, vaddr 0x%x)\n",
 		code, trapcodenames[code], epc, vaddr);
 
+
+    if(curthread->exit_status != NULL)
+		curthread->exit_status = EFAULT;
+
+
+	thread_exit();
+
+
 	
 	// exit thread
-	sys__exit(code);
+//	sys__exit(code);
 
 
 	/*

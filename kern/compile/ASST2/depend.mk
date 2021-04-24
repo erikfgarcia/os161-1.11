@@ -159,14 +159,15 @@ syscall.o: ../../arch/mips/mips/syscall.c ../../include/types.h \
   machine/types.h ../../include/kern/types.h machine/ktypes.h \
   ../../include/kern/errno.h ../../include/lib.h machine/setjmp.h \
   machine/pcb.h machine/spl.h machine/trapframe.h \
-  ../../include/kern/callno.h ../../include/syscall.h
+  ../../include/kern/callno.h ../../include/syscall.h ../../include/pid.h
 threadstart.o: ../../arch/mips/mips/threadstart.S machine/asmdefs.h
 trap.o: ../../arch/mips/mips/trap.c ../../include/types.h machine/types.h \
   ../../include/kern/types.h machine/ktypes.h ../../include/lib.h \
   machine/setjmp.h machine/trapframe.h machine/specialreg.h machine/pcb.h \
   machine/spl.h ../../include/vm.h machine/vm.h ../../include/thread.h \
   ../../include/children.h ../../include/pid.h ../../include/synch.h \
-  ../../include/curthread.h
+  ../../include/curthread.h ../../include/syscall.h \
+  ../../include/kern/errno.h
 tlb_mips1.o: ../../arch/mips/mips/tlb_mips1.S machine/asmdefs.h \
   machine/specialreg.h
 mips-setjmp.o: ../../../lib/libc/mips-setjmp.S machine/asmdefs.h
@@ -314,17 +315,18 @@ main.o: ../../main/main.c ../../include/types.h machine/types.h \
   ../../include/thread.h machine/pcb.h ../../include/children.h \
   ../../include/pid.h ../../include/scheduler.h ../../include/dev.h \
   ../../include/vfs.h ../../include/vm.h machine/vm.h \
-  ../../include/syscall.h ../../include/version.h ../../main/hello.c
+  ../../include/syscall.h machine/trapframe.h ../../include/version.h \
+  ../../main/hello.c
 menu.o: ../../main/menu.c ../../include/types.h machine/types.h \
   ../../include/kern/types.h machine/ktypes.h ../../include/kern/errno.h \
   ../../include/kern/unistd.h ../../include/kern/limits.h \
   ../../include/lib.h machine/setjmp.h ../../include/clock.h \
   opt-synchprobs.h ../../include/thread.h machine/pcb.h \
   ../../include/children.h ../../include/pid.h ../../include/synch.h \
-  ../../include/syscall.h ../../include/uio.h ../../include/vfs.h \
-  ../../include/sfs.h ../../include/vnode.h ../../include/fs.h \
-  ../../include/kern/sfs.h ../../include/test.h opt-synchprobs.h \
-  opt-sfs.h opt-net.h
+  ../../include/syscall.h machine/trapframe.h ../../include/uio.h \
+  ../../include/vfs.h ../../include/sfs.h ../../include/vnode.h \
+  ../../include/fs.h ../../include/kern/sfs.h ../../include/test.h \
+  opt-synchprobs.h opt-sfs.h opt-net.h
 loadelf.o: ../../userprog/loadelf.c ../../include/types.h machine/types.h \
   ../../include/kern/types.h machine/ktypes.h ../../include/kern/errno.h \
   ../../include/lib.h machine/setjmp.h ../../include/uio.h \
@@ -345,6 +347,28 @@ uio.o: ../../userprog/uio.c ../../include/types.h machine/types.h \
   machine/setjmp.h ../../include/uio.h ../../include/thread.h \
   machine/pcb.h ../../include/children.h ../../include/pid.h \
   ../../include/synch.h ../../include/curthread.h
+getpid.o: ../../userprog/getpid.c ../../include/types.h machine/types.h \
+  ../../include/kern/types.h machine/ktypes.h ../../include/kern/unistd.h \
+  ../../include/kern/errno.h ../../include/lib.h machine/setjmp.h \
+  ../../include/addrspace.h ../../include/vm.h machine/vm.h opt-dumbvm.h \
+  ../../include/thread.h machine/pcb.h ../../include/children.h \
+  ../../include/pid.h ../../include/synch.h ../../include/curthread.h \
+  ../../include/vfs.h ../../include/test.h
+getppid.o: ../../userprog/getppid.c ../../include/types.h machine/types.h \
+  ../../include/kern/types.h machine/ktypes.h ../../include/kern/unistd.h \
+  ../../include/kern/errno.h ../../include/lib.h machine/setjmp.h \
+  ../../include/addrspace.h ../../include/vm.h machine/vm.h opt-dumbvm.h \
+  ../../include/thread.h machine/pcb.h ../../include/children.h \
+  ../../include/pid.h ../../include/synch.h ../../include/curthread.h \
+  ../../include/vfs.h ../../include/test.h
+fork.o: ../../userprog/fork.c ../../include/kern/unistd.h \
+  ../../include/types.h machine/types.h ../../include/kern/types.h \
+  machine/ktypes.h ../../include/thread.h machine/pcb.h machine/setjmp.h \
+  ../../include/children.h ../../include/pid.h ../../include/synch.h \
+  ../../include/curthread.h ../../include/lib.h \
+  ../../include/kern/errno.h machine/spl.h machine/trapframe.h \
+  ../../include/addrspace.h ../../include/vm.h machine/vm.h opt-dumbvm.h
+execv.o: ../../userprog/execv.c
 waitpid.o: ../../userprog/waitpid.c machine/spl.h \
   ../../include/kern/unistd.h ../../include/pid.h ../../include/types.h \
   machine/types.h ../../include/kern/types.h machine/ktypes.h \

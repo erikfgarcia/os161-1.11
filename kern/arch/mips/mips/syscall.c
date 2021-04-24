@@ -6,7 +6,7 @@
 #include <machine/trapframe.h>
 #include <kern/callno.h>
 #include <syscall.h>
-
+#include <pid.h>
 
 /*
  * System call handler.
@@ -78,12 +78,50 @@ mips_syscall(struct trapframe *tf)
 		break;
 
 	    /* Add stuff here */
-           case SYS_write:
+            case SYS_write:
                 for (i = 0; i < (size_t) tf->tf_a2; ++i) {
                           kprintf("%c", ((char *) tf->tf_a1)[i]);
           	}
          	break;
 
+	    case SYS_fork:
+                  err = sys_fork(tf);
+             
+               if (err >= 100) { //then it's a return value, not an error code
+                     retval = err;
+                      err = 0;
+                   }
+                 break;
+
+ 	    
+            case SYS__exit:
+		sys__exit(tf->tf_a0);
+            	break;
+
+            case SYS_execv:
+		err = sys_execv((char*) tf->tf_a0, (char **) tf->tf_a1);
+            	break;
+
+
+	    case SYS_waitpid:
+		err = sys_waitpid((pid_t) tf->tf_a0, (void *) tf->tf_a1, (int) tf->tf_a2);
+             	if (err >= MIN_PID) { //then it's a return value, not an error code
+                     retval = err;
+                     err = 0;
+		}
+            	break;
+
+           case SYS_getpid:
+		retval = sys_getpid();
+            	err = 0;
+            	break;
+
+	   case SYS_getppid:
+		 retval = sys_getppid();
+		err = 0;
+		break;
+
+		
 	    default:
 		kprintf("Unknown syscall %d\n", callno);
 		err = ENOSYS;
@@ -126,6 +164,16 @@ md_forkentry(struct trapframe *tf)
 	 *
 	 * Thus, you can trash it and do things another way if you prefer.
 	 */
+// the child will start executing from this fuction "md_forkenry()" (if we chose to call it as an argument to thread_fork())
 
-	(void)tf;
+	assert(curspl == 0);
+    	struct trapframe child_trapfr = *tf;
+    	child_trapfr.tf_v0 = 0; //set the trapframe's tf_v0 to 0 (child should return 0)
+       // trapfr.tf_status = CST_IRQMASK | CST_IEp | CST_KUp; //not sure if this is necessary
+    	child_trapfr.tf_epc += 4; //ncrement tf_epc by 4 (otherwise fork() gets invoke again)
+				//Copy the passed address space to te current process adress space and activate it
+      	mips_usermode(&child_trapfr);// give caontrol back to the usermode : call mipd_usermode() and pass the newlly created child trapframe
+            assert(0);
+
+//	(void)tf;
 }

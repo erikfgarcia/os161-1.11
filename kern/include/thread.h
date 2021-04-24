@@ -12,6 +12,7 @@
 #include <types.h>
 #include <children.h>
 #include <synch.h>
+//#include <filetable.h>
 /////////////////////////
 
 
@@ -42,13 +43,9 @@ struct thread {
 	struct thread *parent;
 	struct children *children;
 	int exit_status;
-	
-	/* This is the filetable for the thread.*/
-	 //struct filetable *ft;
+//	struct filetable *ft;
 
-/////////////////////////////////////////////////////
-
-
+////////////////////////////////////////////
 
 	struct addrspace *t_vmspace;
 

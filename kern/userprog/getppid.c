@@ -28,7 +28,7 @@ parent has already terminated).
 
 
 // return parent PID for current process
-pid_t getppid() {
+pid_t sys_getppid() {
 	// get parent thread (process), return its PID
 	//return curthread->parent->pid
 	
