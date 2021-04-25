@@ -77,10 +77,13 @@ runprogram(char *progname, unsigned long nargs, char **args)
 		md_usermode(0 /*argc*/, NULL /*userspace addr of argv*/,
 		    stackptr, entrypoint);
 	}
-	else {
+	/*else {
+		// ATTEMPT 1
+
+
 		// has additional arguments
 		int i;
-		vaddr_t argv_ptrs[nargs-1];		// str pointers on stack
+		vaddr_t argv_ptrs[nargs];		// str pointers on stack
 		int str_size;
 		int str_size_aligned;
 		int copy_err;
@@ -105,8 +108,10 @@ runprogram(char *progname, unsigned long nargs, char **args)
 			argv_ptrs[i-1] = stackptr;
 		}
 
+		argv_ptrs[nargs-1] = (vaddr_t)NULL;
+
 		// copy string arg addresses to stack
-		for(i=nargs-2; i>=0; i++) {
+		for(i=nargs-1; i>=0; i++) {
 			// adjust and copy to stack
 			stackptr -= 4;
 			copy_err = copyout(&(argv_ptrs[i]), (userptr_t)stackptr, 4);
@@ -120,6 +125,49 @@ runprogram(char *progname, unsigned long nargs, char **args)
 
 		// to user mode
 		md_usermode(nargs-1, (userptr_t)stackptr, stackptr, entrypoint);	
+	}*/
+	else {
+		// ATTEMPT 2
+	
+		//kprintf("\nTEST: #args=%lu\n", nargs);
+
+		unsigned long i;
+		size_t len;
+		size_t stackoffset = 0;	
+		vaddr_t argv_ptrs[nargs];
+		int copy_err;
+		
+		// copy string args onto stack
+		for(i=1; i<nargs; i++) {
+			kprintf("\nTEST: arg=%s\n\n", args[i]);
+
+			len = strlen(args[i]) + 1;
+			stackoffset += len;
+			argv_ptrs[i-1] = stackptr - stackoffset;
+			copy_err = copyout(args[i], (userptr_t)argv_ptrs[i-1], len);
+
+			if(copy_err) {
+				// copy error
+				kprintf("\nTEST: copy error 1\n");
+			}
+		}
+		// NULL terminating pointer
+		argv_ptrs[nargs-1] = 0;
+
+		// adjust stack pointer
+		stackoffset += sizeof(vaddr_t) * nargs;
+		stackptr = stackptr - stackoffset - ((stackptr-stackoffset)%8);
+		copy_err = copyout(argv_ptrs, (userptr_t)stackptr, sizeof(vaddr_t)*nargs);
+
+		if(copy_err) {
+			// copy error
+			kprintf("\nTEST: copy error 2\n");
+		}
+
+		//kprintf("\nTEST: to user mode\n");
+		
+		// return to user mode
+		md_usermode(nargs-1, (userptr_t)stackptr, stackptr, entrypoint);
 	}
 	
 	/* md_usermode does not return */

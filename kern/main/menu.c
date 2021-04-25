@@ -57,6 +57,9 @@ cmd_progthread(void *ptr, unsigned long nargs)
 	char **args = ptr;
 	char progname[128];
 	int result;
+	//unsigned long i;
+	//char argv[nargs][128];
+	
 
 	assert(nargs >= 1);
 
@@ -69,7 +72,19 @@ cmd_progthread(void *ptr, unsigned long nargs)
 
 	strcpy(progname, args[0]);
 
+	/*kprintf("\nTEST: progname = %s\n", args[0]);
+
+	for(i=0; i<nargs; i++) {
+		strcpy(argv[i], args[i]);
+		kprintf("\nTEST: arg = %s\n", argv[i]);
+	}
+
+	//strcpy(progname, args[0]);
+
+	kprintf("\nTEST: progname=%s\n", progname);*/
+
 	//result = runprogram(progname);
+	
 	// account for arguments
 	result = runprogram(progname, nargs, args);
 	if (result) {
