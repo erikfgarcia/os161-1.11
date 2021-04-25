@@ -21,8 +21,12 @@
  *
  * Calls vfs_open on progname and thus may destroy it.
  */
+/*
+ * args contains program name and args in array of strings
+ * nargs is total number of command-line args (progname + additional-args)
+ */
 int
-runprogram(char *progname)
+runprogram(char *progname, unsigned long nargs, char **args)
 {
 	struct vnode *v;
 	vaddr_t entrypoint, stackptr;
@@ -63,11 +67,60 @@ runprogram(char *progname)
 	if (result) {
 		/* thread_exit destroys curthread->t_vmspace */
 		return result;
-	}
+	} 
 
-	/* Warp to user mode. */
-	md_usermode(0 /*argc*/, NULL /*userspace addr of argv*/,
+	// check for additional arguments
+	if(nargs == 1) {
+		// no additional arguments
+
+		/* Warp to user mode. */
+		md_usermode(0 /*argc*/, NULL /*userspace addr of argv*/,
 		    stackptr, entrypoint);
+	}
+	else {
+		// has additional arguments
+		int i;
+		vaddr_t argv_ptrs[nargs-1];		// str pointers on stack
+		int str_size;
+		int str_size_aligned;
+		int copy_err;
+
+		// copy additional arg strings to stack
+		for(i=nargs-1; i>0; i--) {
+			// calc string size and aligned string size
+			str_size = strlen(args[i]);
+			str_size_aligned = (str_size/4 + 1)*4;
+
+			// adjust and copy to stack
+			stackptr -= str_size_aligned;
+			copy_err = copyoutstr(args[i], (userptr_t)stackptr, str_size+1, NULL);
+
+			// check for copy error
+			if(copy_err) {
+				// copy error detected
+				return copy_err;
+			}
+
+			// record string arg stack address
+			argv_ptrs[i-1] = stackptr;
+		}
+
+		// copy string arg addresses to stack
+		for(i=nargs-2; i>=0; i++) {
+			// adjust and copy to stack
+			stackptr -= 4;
+			copy_err = copyout(&(argv_ptrs[i]), (userptr_t)stackptr, 4);
+
+			// check for copy error
+			if(copy_err) {
+				// copy error detected
+				return copy_err;
+			}
+		}
+
+		// to user mode
+		md_usermode(nargs-1, (userptr_t)stackptr, stackptr, entrypoint);	
+	}
 	
 	/* md_usermode does not return */
 	panic("md_usermode returned\n");
