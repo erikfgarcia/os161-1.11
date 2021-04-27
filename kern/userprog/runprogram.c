@@ -28,6 +28,8 @@
 int
 runprogram(char *progname, unsigned long nargs, char **args)
 {
+
+
 	struct vnode *v;
 	vaddr_t entrypoint, stackptr;
 	int result;
@@ -69,109 +71,46 @@ runprogram(char *progname, unsigned long nargs, char **args)
 		return result;
 	} 
 
-	// check for additional arguments
-	if(nargs == 1) {
-		// no additional arguments
-
-		/* Warp to user mode. */
-		md_usermode(0 /*argc*/, NULL /*userspace addr of argv*/,
-		    stackptr, entrypoint);
-	}
-	/*else {
-		// ATTEMPT 1
 
 
-		// has additional arguments
-		int i;
-		vaddr_t argv_ptrs[nargs];		// str pointers on stack
-		int str_size;
-		int str_size_aligned;
-		int copy_err;
 
-		// copy additional arg strings to stack
-		for(i=nargs-1; i>0; i--) {
-			// calc string size and aligned string size
-			str_size = strlen(args[i]);
-			str_size_aligned = (str_size/4 + 1)*4;
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-			// adjust and copy to stack
-			stackptr -= str_size_aligned;
-			copy_err = copyoutstr(args[i], (userptr_t)stackptr, str_size+1, NULL);
 
-			// check for copy error
-			if(copy_err) {
-				// copy error detected
-				return copy_err;
-			}
+     int stack_f_size = 8;
+     unsigned long i;
+     for (i = 0; i < nargs; i++) {
+ 
+         stack_f_size += strlen(args[i]) + 1 + 4; 
+     }
 
-			// record string arg stack address
-			argv_ptrs[i-1] = stackptr;
-		}
+    stackptr -= stack_f_size;
 
-		argv_ptrs[nargs-1] = (vaddr_t)NULL;
+     for (; (stackptr % 8) > 0; stackptr--) {
+         }
 
-		// copy string arg addresses to stack
-		for(i=nargs-1; i>=0; i++) {
-			// adjust and copy to stack
-			stackptr -= 4;
-			copy_err = copyout(&(argv_ptrs[i]), (userptr_t)stackptr, 4);
 
-			// check for copy error
-			if(copy_err) {
-				// copy error detected
-				return copy_err;
-			}
-		}
+    int arg_string_loc = (int) stackptr + 4 + ((nargs + 1) * 4); ///
+     copyout((void *) & nargs, (userptr_t) stackptr, (size_t) 4); //
 
-		// to user mode
-		md_usermode(nargs-1, (userptr_t)stackptr, stackptr, entrypoint);	
-	}*/
-	else {
-		// ATTEMPT 2
-	
-		//kprintf("\nTEST: #args=%lu\n", nargs);
 
-		unsigned long i;
-		size_t len;
-		size_t stackoffset = 0;	
-		vaddr_t argv_ptrs[nargs];
-		int copy_err;
-		
-		// copy string args onto stack
-		for(i=1; i<nargs; i++) {
-			kprintf("\nTEST: arg=%s\n\n", args[i]);
+for (i = 0; i < nargs; i++) {
+         copyout((void *) & arg_string_loc, (userptr_t) (stackptr + 4 + (4 * i)), (size_t) 4);
+         copyoutstr(args[i], (userptr_t) arg_string_loc, (size_t) strlen(args[i]), NULL); 
+         arg_string_loc += strlen(args[i]) + 1; 
+     }
+ 
+ int *null = NULL;
+     copyout((void *) &null, (userptr_t) (stackptr + 4 + (4 * i)), (size_t) 4); 
 
-			len = strlen(args[i]) + 1;
-			stackoffset += len;
-			argv_ptrs[i-1] = stackptr - stackoffset;
-			copy_err = copyout(args[i], (userptr_t)argv_ptrs[i-1], len);
 
-			if(copy_err) {
-				// copy error
-				kprintf("\nTEST: copy error 1\n");
-			}
-		}
-		// NULL terminating pointer
-		argv_ptrs[nargs-1] = 0;
+md_usermode(nargs /*argc*/, (userptr_t) (stackptr + 4) /*userspace addr of argv*/, stackptr, entrypoint);
 
-		// adjust stack pointer
-		stackoffset += sizeof(vaddr_t) * nargs;
-		stackptr = stackptr - stackoffset - ((stackptr-stackoffset)%8);
-		copy_err = copyout(argv_ptrs, (userptr_t)stackptr, sizeof(vaddr_t)*nargs);
-
-		if(copy_err) {
-			// copy error
-			kprintf("\nTEST: copy error 2\n");
-		}
-
-		//kprintf("\nTEST: to user mode\n");
-		
-		// return to user mode
-		md_usermode(nargs-1, (userptr_t)stackptr, stackptr, entrypoint);
-	}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/* md_usermode does not return */
 	panic("md_usermode returned\n");
 	return EINVAL;
 }
+
 

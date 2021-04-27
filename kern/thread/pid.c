@@ -109,13 +109,6 @@ void pid_change_status(pid_t x, int and_mask) {
     splx(spl);
 }
 
-/*
-indicates that the process's parent has exited, if that is the case the pid doesn't need to be saved 
-when the process exit so it if can be recycled
-*/
-void pid_parent_done(pid_t x) {
-    pid_change_status(x, PID_PARENT);
-}
 
 /*
 use to  indicate that the process has exited,
@@ -124,6 +117,16 @@ use to  indicate that the process has exited,
 void pid_process_exit(pid_t x) {
     pid_change_status(x, PID_EXITED);
 }
+
+
+/*
+ * indicates that the process's parent has exited, if that is the case the pid doesn't need to be saved 
+ * when the process exit so it if can be recycled
+ * */
+ void pid_parent_exit(pid_t x) {
+     pid_change_status(x, PID_PARENT);
+}
+
 
 /*
 recycles the pid; used when a thread with no parent exits

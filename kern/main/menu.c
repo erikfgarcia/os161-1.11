@@ -17,6 +17,7 @@
 #include "opt-synchprobs.h"
 #include "opt-sfs.h"
 #include "opt-net.h"
+#include <curthread.h>
 
 #define _PATH_SHELL "/bin/sh"
 
@@ -57,35 +58,21 @@ cmd_progthread(void *ptr, unsigned long nargs)
 	char **args = ptr;
 	char progname[128];
 	int result;
-	//unsigned long i;
-	//char argv[nargs][128];
-	
-
+ 
 	assert(nargs >= 1);
 
 	/*if (nargs > 2) {
 		kprintf("Warning: argument passing from menu not supported\n");
 	}*/
 
+
+	//thread_sleep(curthread);
 	/* Hope we fit. */
 	assert(strlen(args[0]) < sizeof(progname));
-
-	strcpy(progname, args[0]);
-
-	/*kprintf("\nTEST: progname = %s\n", args[0]);
-
-	for(i=0; i<nargs; i++) {
-		strcpy(argv[i], args[i]);
-		kprintf("\nTEST: arg = %s\n", argv[i]);
-	}
-
-	//strcpy(progname, args[0]);
-
-	kprintf("\nTEST: progname=%s\n", progname);*/
-
-	//result = runprogram(progname);
+       //  kprintf("\nIn cmd_progthread\n");
 	
-	// account for arguments
+	strcpy(progname, args[0]);
+ 
 	result = runprogram(progname, nargs, args);
 	if (result) {
 		kprintf("Running program %s failed: %s\n", args[0],
@@ -119,12 +106,20 @@ common_prog(int nargs, char **args)
 		"synchronization-problems kernel.\n");
 #endif
 
+
+
 	result = thread_fork(args[0] /* thread name */,
 			args /* thread arg */, nargs /* thread arg */,
 			cmd_progthread, NULL);
 	if (result) {
 		kprintf("thread_fork failed: %s\n", strerror(result));
 		return result;
+	}
+
+
+	while (!is_only_one_thread()){
+	//	 thread_sleep(curthread); 
+		 clocksleep(1);
 	}
 
 	return 0;
@@ -145,6 +140,8 @@ cmd_prog(int nargs, char **args)
 	/* drop the leading "p" */
 	args++;
 	nargs--;
+
+        
 
 	return common_prog(nargs, args);
 }
@@ -580,6 +577,7 @@ cmd_dispatch(char *cmd)
 	if (nargs==0) {
 		return 0;
 	}
+
 
 	for (i=0; cmdtable[i].name; i++) {
 		if (*cmdtable[i].name && !strcmp(args[0], cmdtable[i].name)) {

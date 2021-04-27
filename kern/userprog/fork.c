@@ -64,7 +64,6 @@ memory for the new process was not available.
 #include <machine/spl.h>
 #include <machine/trapframe.h>
 #include <addrspace.h>
-//#include <filetable.h>
 
 /*
 sys_fork

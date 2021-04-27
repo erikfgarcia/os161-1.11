@@ -104,7 +104,7 @@ thread_destroy(struct thread *thread)
         struct children *p;
 	for (p = thread->children; p != NULL;) {
 	    struct children *temp = p;
-	    pid_parent_done(p->pid);
+	    pid_parent_exit(p->pid);
 	    p = p->next;
 	    kfree(temp);
 	}
@@ -114,7 +114,7 @@ thread_destroy(struct thread *thread)
 	int success = 0;
 	
 	int spl = splhigh();
-	if (thread->parent != NULL) {
+	if (thread->parent != NULL) {//it has a parent 
         	for (p = thread->parent->children; p != NULL;) {
             		if (p->pid == thread->pid) {
                 	success = 1;
@@ -219,18 +219,23 @@ thread_panic(void)
 
 
 /*
- *  */
-
+ * this fuction tracks if there is only one thread at the moment
+ */
 
 int
-one_thread_only() {
+is_only_one_thread() {
   int s;
-  int n;
+  int num;
   
   s = splhigh();
-  n = numthreads;
+  num = numthreads;
   splx(s);
-  return(n==1);
+  
+if(num ==1)
+   return 1;
+
+return 0;
+
 }
 
 ///////////////////////////////////////////////////

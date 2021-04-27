@@ -111,7 +111,7 @@ void thread_wakeup(const void *addr);
 int thread_hassleepers(const void *addr);
 
 //////////////////////////////
-int one_thread_only(void);
+int is_only_one_thread(void);
 ////////////////////////////////////
 
 

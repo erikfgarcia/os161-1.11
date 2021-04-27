@@ -126,7 +126,7 @@ int sys_waitpid(pid_t pid, int *status, int options) {
           return EINVAL;    
     }
     
-	//alomst all error cheking passed
+
 
     struct children * child = NULL;
     struct children *p;
@@ -149,7 +149,7 @@ int sys_waitpid(pid_t pid, int *status, int options) {
         }
     }
     
-    while (child->finished == 0) {// parent waits for child       
+    while (child->finished) {// parent waits for child       
 	thread_sleep(curthread);	
     }
 
@@ -174,7 +174,9 @@ int sys_waitpid(pid_t pid, int *status, int options) {
         }
     }
     
-    pid_parent_done(pid);
+
+//pid_process_exit(pid);  
+   // pid_parent_exit(pid);
     splx(spl);
     
     return pid;
