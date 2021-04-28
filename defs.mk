@@ -32,7 +32,7 @@ HOST_LIBS=
 # This must be an absolute path, because it is used from different
 # levels of the source tree.
 #
-OSTREE=/home/egarci4/os161/root
+OSTREE=/home/rsears2/os161/root
 
 #
 # Name of the platform we're building OS/161 to run on.

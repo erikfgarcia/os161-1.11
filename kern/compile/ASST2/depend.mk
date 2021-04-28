@@ -368,7 +368,13 @@ fork.o: ../../userprog/fork.c ../../include/kern/unistd.h \
   ../../include/curthread.h ../../include/lib.h \
   ../../include/kern/errno.h machine/spl.h machine/trapframe.h \
   ../../include/addrspace.h ../../include/vm.h machine/vm.h opt-dumbvm.h
-execv.o: ../../userprog/execv.c
+execv.o: ../../userprog/execv.c ../../include/types.h machine/types.h \
+  ../../include/kern/types.h machine/ktypes.h ../../include/kern/unistd.h \
+  ../../include/kern/errno.h ../../include/lib.h machine/setjmp.h \
+  ../../include/addrspace.h ../../include/vm.h machine/vm.h opt-dumbvm.h \
+  ../../include/thread.h machine/pcb.h ../../include/children.h \
+  ../../include/pid.h ../../include/synch.h ../../include/curthread.h \
+  ../../include/vfs.h ../../include/test.h
 waitpid.o: ../../userprog/waitpid.c machine/spl.h \
   ../../include/kern/unistd.h ../../include/pid.h ../../include/types.h \
   machine/types.h ../../include/kern/types.h machine/ktypes.h \
