@@ -112,15 +112,14 @@ int sys_waitpid(pid_t pid, int *status, int options) {
     
     //The status argument was an invalid pointer.
 
-         //misaligned memory address
     if (((int) status) % 4 != 0) {
-                return EFAULT;
+               return EFAULT;
     }
      
  
     int spl = splhigh();
   	
-	//inalid or unsupported options
+	//Unsupported option
       if (options != 0) {
           splx(spl);
           return EINVAL;    
@@ -142,28 +141,30 @@ int sys_waitpid(pid_t pid, int *status, int options) {
     if (child == NULL) { // this process does not have this pid as child (you shoul not be interested) or the pid is not in use
   
         splx(spl);
-        if (pid_claimed(pid)) {
-            return EINVAL;//   pid is not in use
+        if (pid_is_used(pid)) {
+            return EINVAL;//  
         } else {
-            return EINVAL; //not a valid pid
+            return  ESRCH; // No such process this was defined in errno.h and  
         }
     }
     
-    while (child->finished) {// parent waits for child       
-	thread_sleep(curthread);	
+    while (!child->finished) {// parent waits for child       
+//	thread_sleep(curthread);
+   //   kprintf("\nIm waiting pid:%d for my child pid:  %d \n", curthread->pid, child->pid);
+     clocksleep(1);	
     }
 
 //return its exit code in the integer pointed to by status   
  
     *status = child->exit_code;
     
-    //remove the child from children list since it has exited and it's pid is no longer needed
+    //remove the child from children list it's pid is no longer needed
     if (curthread->children->pid == pid) {
         struct children *temp = curthread->children;
         curthread->children = curthread->children->next;
         kfree(temp);
     } else {
-        for (p = curthread->children;; p = p->next) {
+        for (p = curthread->children; ; p = p->next) {
             assert(p->next != NULL);
             if (p->next->pid == pid) {
                 struct children *temp = p->next;
@@ -173,10 +174,8 @@ int sys_waitpid(pid_t pid, int *status, int options) {
             }
         }
     }
-    
-
-//pid_process_exit(pid);  
-   // pid_parent_exit(pid);
+      
+    pid_parent_exit(pid);
     splx(spl);
     
     return pid;

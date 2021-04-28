@@ -120,16 +120,18 @@ we may use this document to do the design document
 
        in detroy() 
        I make sure the record is updated when the thread exits  
+       - there is a helper function is_only_one_thread() returns 1 is there is only one thread
+ 
 
 * This is the pid implemetation 
   
    -pid_t new_pid() this give you a new pid;
 	
 these change the pid exit_status 
-   -void pid_parent_done(pid_t x)  indicates that the process's parent has exited, if that is the case the pid doesn't need to be saved when the process exits
-   -pid_process_exit(pid_t x) indicate that the process  has exited, it can be recycled
-   -void pid_free(pid_t x) recycles the pid. use it when a thread with no parent exits 
-   -int pid_claimed(pid_t x) check if the pid is being used
+   -void pid_parent_exit(pid_t pid)  indicates that the process's parent has exited, if that is the case the pid doesn't need to be saved when the process exits
+   -pid_process_exit(pid_t pid) indicate that the process  has exited, it can be recycled
+   -void pid_free(pid_t pid) recycles the pid. use it when a thread with no parent exits 
+   -int pid_is_used(pid_t pid) check if the pid is being used
 
 *This is the Global Process table implementation 
 info of all process

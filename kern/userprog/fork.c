@@ -111,6 +111,9 @@ pid_t sys_fork(struct trapframe *tf){
         splx(spl);
         return ENOMEM;
     }
+
+//too many process do this im not sure when should this happens  
+    if(0) return EAGAIN;
  
 // we do not need to create a pid here because is created when the new thread is created in thread.c
 //copy the trapframe of the parent  
@@ -132,8 +135,9 @@ int  thread_fork(const char *name,  void *data1, unsigned long data2,    void (*
 
      struct thread *child = NULL;
 
-     void (*func_pt)(void *, unsigned long) = &md_forkentry;// this will create a warning 
-  
+     void (*func_pt)(void *, unsigned long) = &md_forkentry;//  
+
+ //call thread_fork() 
     int result = thread_fork(strcat(child_name, "'s child"), tf, curthread->t_vmspace, func_pt, &child);
    
     if (result != 0) {
@@ -165,6 +169,6 @@ int  thread_fork(const char *name,  void *data1, unsigned long data2,    void (*
     
     int retval = child->pid;
     splx(spl);
-//    kprintf("I am the father: my child pid is %d\n", retval);
+   
     return retval; 
 }

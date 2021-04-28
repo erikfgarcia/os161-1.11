@@ -69,7 +69,7 @@ cmd_progthread(void *ptr, unsigned long nargs)
 	//thread_sleep(curthread);
 	/* Hope we fit. */
 	assert(strlen(args[0]) < sizeof(progname));
-       //  kprintf("\nIn cmd_progthread\n");
+  //kprintf("\nIn cmd_progthread\n");
 	
 	strcpy(progname, args[0]);
  

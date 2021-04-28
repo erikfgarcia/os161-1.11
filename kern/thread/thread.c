@@ -64,13 +64,14 @@ thread_create(const char *name)
 	
 	// If you add things to the thread structure, be sure to initialize
 	// them here.
-
+///////////////////////////////////////////////////
+ /*these member have been added to the thread */
 	thread->pid = new_pid(); 
 	thread->parent = NULL;
 	thread->children = NULL;
 	thread->exit_status = -1; 
  
-///////////////////////////////////////////////////////////////////////////////////////////////////////////	
+/////////////////////////////////////////////////////	
 	return thread;
 }
 
@@ -100,38 +101,32 @@ thread_destroy(struct thread *thread)
 	}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-  //if this thread  is a parent let the children know that the parent is done 
+  //If this thread  is a parent let the children know that the parent is done 
         struct children *p;
-	for (p = thread->children; p != NULL;) {
+
+	for (p = thread->children; p != NULL;p = p->next) {
 	    struct children *temp = p;
-	    pid_parent_exit(p->pid);
-	    p = p->next;
+	    pid_parent_exit(p->pid); 
 	    kfree(temp);
 	}
 
-
-// if this thread has a parent let the parent know that the child is done 
-	int success = 0;
-	
+// If this thread has a parent let the parent know that the child is done 
+		
 	int spl = splhigh();
 	if (thread->parent != NULL) {//it has a parent 
-        	for (p = thread->parent->children; p != NULL;) {
+        	for (p = thread->parent->children; p != NULL; p = p->next ) {
             		if (p->pid == thread->pid) {
-                	success = 1;
-                	p->finished = 1; //done
-                	p->exit_code = thread->exit_status;
-                	p = NULL; 
-            	}else{
-                	p = p->next;
-            	}
-        }
-
-        	assert(success);
+                		p->finished = 1; //done
+			//	kprintf("\nThe exiting  child : %d the parent : %d\n", thread->pid , thread->parent->pid);
+                		p->exit_code = thread->exit_status;
+                		break; 
+            		} 
+        	}
+        	
         	pid_process_exit(thread->pid);
 	} else {
 	  	pid_free(thread->pid);
-	}
-	
+	}	
 	splx(spl);
 	thread_wakeup((void *) thread->pid);
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -219,7 +214,9 @@ thread_panic(void)
 
 
 /*
- * this fuction tracks if there is only one thread at the moment
+ * This fuction tracks if there is only one thread at the moment.
+ * if there is only one thread at the moment returns 1  
+ * 
  */
 
 int

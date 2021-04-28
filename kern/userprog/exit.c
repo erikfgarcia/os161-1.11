@@ -39,6 +39,6 @@ _exit does not return.
     */
   
 	curthread->exit_status = exitcode;
-	thread_exit();
+	       thread_exit(); 
 }
 

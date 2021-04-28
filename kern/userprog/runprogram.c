@@ -86,8 +86,7 @@ runprogram(char *progname, unsigned long nargs, char **args)
 
     stackptr -= stack_f_size;
 
-     for (; (stackptr % 8) > 0; stackptr--) {
-         }
+     for (; (stackptr % 8) > 0; stackptr--){ } 
 
 
     int arg_string_loc = (int) stackptr + 4 + ((nargs + 1) * 4); ///

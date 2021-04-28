@@ -150,6 +150,6 @@ main(int argc, char *argv[])
 
 	test(nowait);
 
-	warnx("Complete.");
+	warnx("Compleete.");
 	return 0;
 }
