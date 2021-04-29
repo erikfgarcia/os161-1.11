@@ -29,7 +29,6 @@ int
 runprogram(char *progname, unsigned long nargs, char **args)
 {
 
-
 	struct vnode *v;
 	vaddr_t entrypoint, stackptr;
 	int result;
