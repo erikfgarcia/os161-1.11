@@ -31,6 +31,14 @@ dofork(void)
 	if (pid < 0) {
 		warn("fork");
 	}
+	else if(pid > 0) {
+		// parent
+		//kprintf("PARENT of %d, PID=%d\n", pid, getpid());
+	}
+	else {
+		// child
+		//kprintf("CHILD of %d, PID=%d\n", getppid(), getpid());	
+	}
 	return pid;
 }
 

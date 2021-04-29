@@ -88,6 +88,7 @@ int sys_execv(const char *program, char **args){
 	vaddr_t entrypoint, stackptr;
 	int result;
 
+	kprintf("EXECV called\n");
 	
 	// copy name to kernel space
 	char progname[128];
@@ -97,17 +98,20 @@ int sys_execv(const char *program, char **args){
 		return result;
 	} 
 
+	kprintf("PROGNAME: %s\n", progname);
+
 	// find number of args
 	int offset = 0;
 	unsigned long nargs = 0;
-	while(*(args+offset) != NULL) {
+	while((args+offset) != NULL) {
 		result = copyin((userptr_t)(args+offset), NULL, sizeof(int));
 		if(result) return result;
 
 		offset += 4;		// aligned by 4
 		nargs++;
 	}
-
+	
+	kprintf("NARGS: %lu\n", nargs);
 
 	/* Open the file. */
 	result = vfs_open(progname, O_RDONLY, &v);
