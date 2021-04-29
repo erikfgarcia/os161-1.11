@@ -38,10 +38,6 @@ pid_t sys_getppid() {
 		// parent does not exist
 		return -1;
 	}
-	else if(curthread->parent->exit_status != 0 ) {
-		// parent exited
-		return -1;
-	}
 	else {
 		// parent exists and has not exited
 		return curthread->parent->pid;
