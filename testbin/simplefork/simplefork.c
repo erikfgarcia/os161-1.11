@@ -22,11 +22,14 @@ int
 main(int argc, char *argv[])
 {
 	int pid;
+	int status;
 
 	pid = fork();
 	if(pid > 0) {
 		// parent
-		warn("PARENT of %d, PID=%d\n", pid, getpid());
+		//warn("PARENT of %d, PID=%d\n", pid, getpid());
+		waitpid(pid, &status, 0);
+		warn("PARENT waited on %d, PID=%d\n", pid, getpid());
 	}
 	else if(pid == 0) {
 		// child
