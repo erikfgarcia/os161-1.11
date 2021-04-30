@@ -10,7 +10,7 @@
 #include <vfs.h>
 #include <test.h>
 #include <pid.h>
-
+#include <machine/spl.h>
 
 /*
 
@@ -34,15 +34,14 @@ pid_t sys_getppid() {
 	
 	// check if parent has exited and exists
 	// return PID if not exited, else -1
+int spl = splhigh();
+
 	if(curthread->parent == NULL) {
 		// parent does not exist
+		 splx(spl);
 		return -1;
-	}
-	else if(curthread->parent->exit_status != 0 ) {
-		// parent exited
-		return -1;
-	}
-	else {
+	}else {
+		 splx(spl);
 		// parent exists and has not exited
 		return curthread->parent->pid;
 	}

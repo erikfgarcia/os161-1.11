@@ -159,7 +159,10 @@ syscall.o: ../../arch/mips/mips/syscall.c ../../include/types.h \
   machine/types.h ../../include/kern/types.h machine/ktypes.h \
   ../../include/kern/errno.h ../../include/lib.h machine/setjmp.h \
   machine/pcb.h machine/spl.h machine/trapframe.h \
-  ../../include/kern/callno.h ../../include/syscall.h ../../include/pid.h
+  ../../include/kern/callno.h ../../include/syscall.h ../../include/pid.h \
+  ../../include/curthread.h ../../include/thread.h \
+  ../../include/children.h ../../include/synch.h \
+  ../../include/addrspace.h ../../include/vm.h machine/vm.h opt-dumbvm.h
 threadstart.o: ../../arch/mips/mips/threadstart.S machine/asmdefs.h
 trap.o: ../../arch/mips/mips/trap.c ../../include/types.h machine/types.h \
   ../../include/kern/types.h machine/ktypes.h ../../include/lib.h \
@@ -360,7 +363,7 @@ getppid.o: ../../userprog/getppid.c ../../include/types.h machine/types.h \
   ../../include/addrspace.h ../../include/vm.h machine/vm.h opt-dumbvm.h \
   ../../include/thread.h machine/pcb.h ../../include/children.h \
   ../../include/pid.h ../../include/synch.h ../../include/curthread.h \
-  ../../include/vfs.h ../../include/test.h
+  ../../include/vfs.h ../../include/test.h machine/spl.h
 fork.o: ../../userprog/fork.c ../../include/kern/unistd.h \
   ../../include/types.h machine/types.h ../../include/kern/types.h \
   machine/ktypes.h ../../include/thread.h machine/pcb.h machine/setjmp.h \

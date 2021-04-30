@@ -92,12 +92,12 @@ sys_fork
 
 */
 
-pid_t sys_fork(struct trapframe *tf){
+pid_t sys_fork(struct trapframe *tf ){
    
-    
+  
 //copy the name of the parent    
     
-    int spl = splhigh();
+    int spl =  splhigh();
 
     char *child_name = kmalloc(sizeof(char) * (strlen(curthread->t_name)+9));
     if (child_name == NULL) {
@@ -108,7 +108,7 @@ pid_t sys_fork(struct trapframe *tf){
     child_name = strcpy(child_name, curthread->t_name);
     struct children *new_child = kmalloc(sizeof(struct children)); //
     if (new_child == NULL) {
-        splx(spl);
+        splx(spl); 
         return ENOMEM;
     }
 
@@ -118,13 +118,6 @@ pid_t sys_fork(struct trapframe *tf){
 // we do not need to create a pid here because is created when the new thread is created in thread.c
 //copy the trapframe of the parent  
 //copy the address space of the parent
-
-
-/*
- * * Create a new thread based on an existing one.
- *  * The new thread has name NAME, and starts executing in function FUNC.
- *   * DATA1 and DATA2 are passed to FUNC.
- * */
  
 /*
 int  thread_fork(const char *name,  void *data1, unsigned long data2,    void (*func)(void *, unsigned long),  struct thread **ret)
@@ -132,43 +125,41 @@ int  thread_fork(const char *name,  void *data1, unsigned long data2,    void (*
 
 //void  md_forkentry(struct trapframe *tf) this has to be mofied so 
    
+/*****/
 
-     struct thread *child = NULL;
+	struct trapframe *child_trapframe = kmalloc(sizeof(struct trapframe));
+	//Copy parent trapframe to the to-be child copy.
+	memcpy(child_trapframe, tf, sizeof(struct trapframe));
 
-     void (*func_pt)(void *, unsigned long) = &md_forkentry;//  
 
- //call thread_fork() 
-    int result = thread_fork(strcat(child_name, "'s child"), tf, curthread->t_vmspace, func_pt, &child);
-   
-    if (result != 0) {
-        kfree(new_child);
-        splx(spl);
-        return result;
-    }  
 
-    
-    child->parent = curthread;
-    //add new process to list of children
+
+        struct addrspace *child_addrspace;
+	//Copy using as_copy.
+	as_copy(curthread->t_vmspace, &child_addrspace);
+	
+        struct thread *child=NULL;
+	
+        int result = thread_fork(curthread->t_name, (void*)child_trapframe, (unsigned long)child_addrspace, md_forkentry, &child);
+		if (result != 0){
+ 
+                	kfree(new_child);
+		         splx(spl);
+		return result;
+		}	
+
+
+ 
+//    child->parent = curthread;
+    //add process to list of children
     new_child->pid = child->pid;
     new_child->finished = 0;
     new_child->exit_code = -2;
     new_child->next = curthread->children;
-    curthread->children = new_child;
-    
-    
-    int err = as_copy(curthread->t_vmspace, &child->t_vmspace); //copy the data to the child process's new address space
-    if (err != 0) {
-        
-        child->t_vmspace = NULL;
-        child->parent = NULL; //t
-        md_initpcb(&child->t_pcb, child->t_stack, 0, 0, &thread_exit); 
-        splx(spl);
-        return err;
-    }
-   
-    
+    curthread->children = new_child; 
     int retval = child->pid;
+
     splx(spl);
-   
+
     return retval; 
 }

@@ -67,7 +67,7 @@ thread_create(const char *name)
 ///////////////////////////////////////////////////
  /*these member have been added to the thread */
 	thread->pid = new_pid(); 
-	thread->parent = NULL;
+	thread->parent = curthread;//NULL;
 	thread->children = NULL;
 	thread->exit_status = -1; 
  

@@ -107,9 +107,7 @@ this code is not defined in the OS/161 base system.
 
 
 int sys_waitpid(pid_t pid, int *status, int options) {
-    
-  //error checking 
-    
+     
     //The status argument was an invalid pointer.
 
     if (((int) status) % 4 != 0) {
@@ -148,9 +146,9 @@ int sys_waitpid(pid_t pid, int *status, int options) {
         }
     }
     
-    while (!child->finished) {// parent waits for child       
+    while ( child->finished==0) {// parent waits for child       
 //	thread_sleep(curthread);
-   //   kprintf("\nIm waiting pid:%d for my child pid:  %d \n", curthread->pid, child->pid);
+    //  kprintf("\nIm waiting pid:%d for my child pid:  %d \n", curthread->pid, child->pid);
      clocksleep(1);	
     }
 
@@ -165,7 +163,7 @@ int sys_waitpid(pid_t pid, int *status, int options) {
         kfree(temp);
     } else {
         for (p = curthread->children; ; p = p->next) {
-            assert(p->next != NULL);
+           // assert(p->next != NULL);
             if (p->next->pid == pid) {
                 struct children *temp = p->next;
                 p->next = p->next->next;

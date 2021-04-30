@@ -79,12 +79,10 @@ runprogram(char *progname, unsigned long nargs, char **args)
      int stack_f_size = 8;
      unsigned long i;
      for (i = 0; i < nargs; i++) {
- 
          stack_f_size += strlen(args[i]) + 1 + 4; 
      }
 
     stackptr -= stack_f_size;
-
      for (; (stackptr % 8) > 0; stackptr--){ } 
 
 

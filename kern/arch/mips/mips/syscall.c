@@ -7,6 +7,9 @@
 #include <kern/callno.h>
 #include <syscall.h>
 #include <pid.h>
+#include <curthread.h>
+#include <thread.h>
+#include <addrspace.h>
 
 /*
  * System call handler.
@@ -156,7 +159,7 @@ mips_syscall(struct trapframe *tf)
 }
 
 void
-md_forkentry(struct trapframe *tf)
+md_forkentry(struct trapframe *tf, unsigned long addr)
 {
 	/*
 	 * This function is provided as a reminder. You need to write
@@ -166,13 +169,22 @@ md_forkentry(struct trapframe *tf)
 	 */
 // the child will start executing from this fuction "md_forkenry()" (if we chose to call it as an argument to thread_fork())
 
-	assert(curspl == 0);
-    	struct trapframe child_trapfr = *tf;
+        struct trapframe  child_trapfr;
+        bzero(&child_trapfr, sizeof(child_trapfr)); 
+
+	memcpy(&child_trapfr, tf, sizeof(struct trapframe));
+
     	child_trapfr.tf_v0 = 0; //set the trapframe's tf_v0 to 0 (child should return 0)
-      
+        child_trapfr.tf_a3 = 0;     
     	child_trapfr.tf_epc += 4; //ncrement tf_epc by 4 (otherwise fork() gets invoke again)
-	//Copy the passed address space to te current process adress space and activate it
-      	mips_usermode(&child_trapfr);// give caontrol back to the usermode : call mipd_usermode() and pass the newlly created child trapframe
+	
+
+//Copy the passed address space to te current process adress space and activate it
+     
+        as_copy(addr, &curthread->t_vmspace);
+	as_activate(curthread->t_vmspace);
+
+ 	mips_usermode(&child_trapfr);// give caontrol back to the usermode : call mipd_usermode() and pass the newlly created child trapframe
             assert(0);
 
 //	(void)tf;

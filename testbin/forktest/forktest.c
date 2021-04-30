@@ -31,14 +31,6 @@ dofork(void)
 	if (pid < 0) {
 		warn("fork");
 	}
-	else if(pid > 0) {
-		// parent
-		//kprintf("PARENT of %d, PID=%d\n", pid, getpid());
-	}
-	else {
-		// child
-		//kprintf("CHILD of %d, PID=%d\n", getppid(), getpid());	
-	}
 	return pid;
 }
 
@@ -51,7 +43,8 @@ static
 void
 check(void)
 {
-	int i;
+
+int i;
 
 	mypid = getpid();
 	
@@ -126,15 +119,15 @@ test(int nowait)
 	pid2 = dofork();
 	putchar('2');
 	check();
-	pid3 = dofork();
-	putchar('3');
-	check();
+//	pid3 = dofork();
+//	putchar('3');
+//	check();
 
 	/*
 	 * These must be called in reverse order to avoid waiting
 	 * improperly.
 	 */
-	dowait(nowait, pid3);
+	//dowait(nowait, pid3);
 	dowait(nowait, pid2);
 	dowait(nowait, pid1);
 	dowait(nowait, pid0);
@@ -158,6 +151,6 @@ main(int argc, char *argv[])
 
 	test(nowait);
 
-	warnx("Compleete.");
+	warnx("Complete.");
 	return 0;
 }

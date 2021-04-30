@@ -1,5 +1,3 @@
-
-
 #include <types.h>
 #include <kern/unistd.h>
 #include <kern/errno.h>
@@ -10,6 +8,7 @@
 #include <vm.h>
 #include <vfs.h>
 #include <test.h>
+
 
 
 
@@ -65,132 +64,150 @@ Errors
 The following error codes should be returned under the conditions given.
 Other error codes may be returned for other errors not mentioned here.
 
-�� ENODEV The device prefix of program did not exist. ENOTDIR A
-non-final component of program was not a directory. ENOENT program did
-not exist. EISDIR program is a directory. ENOEXEC program is not in a
-recognizable executable file format, was for the wrong platform, or
-contained invalid fields. ENOMEM Insufficient virtual memory is
-available. E2BIG The total size of the argument strings is too large.
-EIO A hard I/O error occurred. EFAULT One of the args is an invalid
+�� ENODEV The device prefix of program did not exist.
+ ENOTDIR A non-final component of program was not a directory.
+ ENOENT program did not exist.
+ EISDIR program is a directory. 
+ ENOEXEC program is not in a recognizable executable file format, was for the wrong platform, or
+contained invalid fields. 
+ENOMEM Insufficient virtual memory is available.
+ E2BIG The total size of the argument strings is too large.
+ EIO A hard I/O error occurred. 
+EFAULT One of the args is an invalid
 pointer.
 
 
 */
 
-int sys_execv(const char *program, char **args){
- 
-
- 	(void)program;
-	(void)args;
- 
-
-	struct vnode *v;
-	vaddr_t entrypoint, stackptr;
-	int result;
-
-	kprintf("EXECV called\n");
-	
-	// copy name to kernel space
-	char progname[128];
-	size_t progname_len;
-	result = copyinstr((userptr_t)program, progname, 128, &progname_len);
-	if(result) {
-		return result;
-	} 
-
-	kprintf("PROGNAME: %s\n", progname);
-
-	// find number of args
-	int offset = 0;
-	unsigned long nargs = 0;
-	while((args+offset) != NULL) {
-		result = copyin((userptr_t)(args+offset), NULL, sizeof(int));
-		if(result) return result;
-
-		offset += 4;		// aligned by 4
-		nargs++;
-	}
-	
-	kprintf("NARGS: %lu\n", nargs);
-
-	/* Open the file. */
-	result = vfs_open(progname, O_RDONLY, &v);
-	if (result) {
-		return result;
-	}
-
-	/* We should be a new thread. */
-	assert(curthread->t_vmspace == NULL);
-
-	/* Create a new address space. */
-	curthread->t_vmspace = as_create();
-	if (curthread->t_vmspace==NULL) {
-		vfs_close(v);
-		return ENOMEM;
-	}
-
-	/* Activate it. */
-	as_activate(curthread->t_vmspace);
-
-	/* Load the executable. */
-	result = load_elf(v, &entrypoint);
-	if (result) {
-		/* thread_exit destroys curthread->t_vmspace */
-		vfs_close(v);
-		return result;
-	}
-
-	/* Done with the file now. */
-	vfs_close(v);
-
-	/* Define the user stack in the address space */
-	result = as_define_stack(curthread->t_vmspace, &stackptr);
-	if (result) {
-		/* thread_exit destroys curthread->t_vmspace */
-		return result;
-	} 
+int sys_execv(const char *progname, char **args){
 
 
-	int stack_f_size = 8;
-	unsigned long i;
+    assert(curthread->t_vmspace != NULL);
+
+   if (strlen(progname) < 1) 
+        return EFAULT;   
+
+//copyin the arguments from user space to kernel space ( the programname and args)
+    
+   // we need to calculate the number of args
+    int nargs = 0;
+    int i = 0;
+    while (args[i] != NULL) {
+        nargs++;
+        i++;
+    }
+    
+
+    // get space and copy  progname
+    char* progname2 = kmalloc(sizeof (char) * (strlen(progname)+1));
+   if(progname2==NULL)
+	return ENOMEM;
+
+    copyinstr((const_userptr_t) progname, progname2, (strlen(progname)+1), NULL);
+
+    // get space for the argumenta and capy the argumest into the kernel
+    char** arguments= kmalloc(sizeof (char*) * nargs);
+    if(arguments ==NULL)
+        return ENOMEM;
+
     for (i = 0; i < nargs; i++) {
-         stack_f_size += strlen(args[i]) + 1 + 4; 
-     }
+        
+        if (strlen(args[i]) < 1) {
+            return EFAULT;
+        }
+        int arg_size = strlen(args[i]);
+        arguments[i] = kmalloc(sizeof (char) * (arg_size + 1));
+	if(arguments[i]==NULL)
+         	return ENOMEM;
+        copyinstr((const_userptr_t) args[i], arguments[i], (arg_size + 1), NULL);
+    }
 
-    stackptr -= stack_f_size;
+////////////////////////////////////////////////// 
+  
 
-    for (; (stackptr % 8) > 0; stackptr--) {
-         }
+    struct vnode *v;
+    vaddr_t entrypoint, stackptr;
+    int result;
 
-
-    int arg_string_loc = (int) stackptr + 4 + ((nargs + 1) * 4); ///
-    copyout((void *) & nargs, (userptr_t) stackptr, (size_t) 4); //
-
-
-	for (i = 0; i < nargs; i++) {
-    	copyout((void *) & arg_string_loc, (userptr_t) (stackptr + 4 + (4 * i)), (size_t) 4);
-       	copyoutstr(args[i], (userptr_t) arg_string_loc, (size_t) strlen(args[i]), NULL); 
-       	arg_string_loc += strlen(args[i]) + 1; 
-  	}
+    /* Open the file. */
+    result = vfs_open(progname2, O_RDONLY, &v);
+    if (result) {
+        return result;
+    }
  
-	int *null = NULL;
-    copyout((void *) &null, (userptr_t) (stackptr + 4 + (4 * i)), (size_t) 4); 
+   // destory current address space
+    as_destroy(curthread->t_vmspace);
+    curthread->t_vmspace = NULL;
+  
+    assert(curthread->t_vmspace == NULL);
+
+   
+   /* Create a new address space. */
+    curthread->t_vmspace = as_create();
+    if (curthread->t_vmspace == NULL) {
+        vfs_close(v);
+        return ENOMEM;
+    }
+
+   
+    /* Activate it. */
+    as_activate(curthread->t_vmspace);
+
+   
+    /* Load the executable. */
+    result = load_elf(v, &entrypoint);
+    if (result) {
+        /* thread_exit destroys curthread->t_vmspace */
+        vfs_close(v);
+        return result;
+    }
+
+    /* Done with the file now*/
+    vfs_close(v);
 
 
-	md_usermode(nargs /*argc*/, (userptr_t) (stackptr + 4) /*userspace addr of argv*/, 
-		stackptr, entrypoint);
 
+////////////////////////////////////////////
 
- 	return -1;
+    /* calculate the size of the stack  */
+
+    int stack_f_size  = 8; //
+    for (i = 0; i < nargs; i++) {
+        stack_f_size  += strlen(arguments[i]) + 1 + 4; //length of each argument plus the pointer
+    }
+
+    /* Decide the stackpointer address */
+    stackptr -= stack_f_size;
+    for (; (stackptr % 8) > 0; stackptr--) { }
+
+    // copy the arguments on the stack 
+    int arg_string_loc = (int) stackptr + 4 + ((nargs + 1) * 4); //begining 
+    copyout((void *) & nargs, (userptr_t) stackptr, (size_t) 4); 
+    for (i = 0; i < nargs; i++) {
+        copyout((void *) & arg_string_loc, (userptr_t) (stackptr + 4 + (4 * i)), (size_t) 4); 
+        copyoutstr(arguments[i], (userptr_t) arg_string_loc, (size_t) strlen(arguments[i]), NULL); 
+        arg_string_loc += strlen(arguments[i]) + 1; //next iteration
+    }
+   //place a  null in last position
+    int *null = NULL;
+    copyout((void *) & null, (userptr_t) (stackptr + 4 + (4 * i)), (size_t) 4); 
+
+    // free  memory used for arguments 
+    kfree(progname2);
+
+    //free the arguments
+    for (i = 0; i < nargs; i++) {
+        kfree(arguments[i]);
+    }
+    
+    kfree(arguments);
+ 
+    md_usermode(nargs /*argc*/, (userptr_t) (stackptr+4) /*userspace addr of argv*/, stackptr, entrypoint);
+
+    /* md_usermode does not return */
+    panic("md_usermode returned\n");
+    return EINVAL;
 }
-
-
-
-
-
-
-
-
 
 
 
