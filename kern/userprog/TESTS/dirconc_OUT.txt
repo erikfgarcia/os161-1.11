@@ -1,0 +1,40 @@
+rsears2@zeus-1:~/os161/root$ sys161 kernel
+sys161: System/161 release 1.14, compiled Sep  4 2014 10:34:58
+Hello World
+
+OS/161 base system version 1.11
+Copyright (c) 2000, 2001, 2002, 2003
+   President and Fellows of Harvard College.  All rights reserved.
+
+Put-your-group-name-here's system version 0 (ASST2 #16)
+
+Cpu is MIPS r2000/r3000
+328k physical memory available
+Device probe...
+lamebus0 (system main bus)
+emu0 at lamebus0
+ltrace0 at lamebus0
+ltimer0 at lamebus0
+hardclock on ltimer0 (100 hz)
+beep0 at ltimer0
+rtclock0 at ltimer0
+lrandom0 at lamebus0
+random0 at lrandom0
+lhd0 at lamebus0
+lhd1 at lamebus0
+lser0 at lamebus0
+con0 at lser0
+pseudorand0 (virtual)
+
+OS/161 kernel [? for menu]: p testbin/dirconc
+Concurrent directory ops test
+Usage: dirconc filesystem [random-seed]
+Operation took 0.280964720 seconds
+OS/161 kernel [? for menu]: q
+Shutting down.
+The system is halted.
+sys161: 191297855 cycles (4068485k, 4315u, 187225055i)
+sys161: 1521 irqs 15 exns 0r/0w disk 20r/777w console 9r/0w/3m emufs 0r/0w net
+sys161: Elapsed real time: 7.649526 seconds (25.0078 mhz)
+sys161: Elapsed virtual time: 7.651914200 seconds (25 mhz)
+rsears2@zeus-1:~/os161/root$
