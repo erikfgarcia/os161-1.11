@@ -28,18 +28,33 @@ main(int argc, char *argv[])
 	if(pid > 0) {
 		// parent
 
-		warn("PARENT of %d, PID=%d\n", pid, getpid());
+		printf("PARENT of %d, PID=%d\n", pid, getpid());
 		if (waitpid(pid, &status, 0)<0) {
-                         warn("waitpid");
-                 }
+       		printf("ERROR: waitpid\n");
+      	}
+		else {
+			printf("PARENT waited on %d, PID=%d\n", pid, getpid());
+		}
 
 
 	}else if(pid == 0) {
 		// child
-		warn("CHILD of %d, PID=%d\n", getppid(), getpid());
+		int i;	
+		int max = 1000000;
+		int period = max / 10;	
+
+		printf("CHILD of %d, PID=%d\n", getppid(), getpid());
+
+		printf("CHILD: sleeping\n");
+		for(i=0; i<max; i++) {
+			if(i%period == 0)
+				printf(" ==> %d/10 done\n", i/period);
+		}
+		printf("CHILD: awake\n");
+		
 	}else {
 		// error
-		warn("ERROR\n");
+		printf("ERROR: fork\n");
 	}		
 
 	return 0;
