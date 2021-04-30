@@ -33,20 +33,13 @@ pid_t sys_getppid() {
 	//return curthread->parent->pid
 	
 	// check if parent has exited and exists
-	// return PID if not exited, else -1
-int spl = splhigh();
+	// return PID if not exited, else -1;
 
 	if(curthread->parent == NULL) {
 		// parent does not exist
-		 splx(spl);
 		return -1;
-<<<<<<< HEAD
+
 	}else {
-		 splx(spl);
-=======
-	}
-	else {
->>>>>>> fe6731948c644cd77532489b42f507fa0a5d3e4b
 		// parent exists and has not exited
 		return curthread->parent->pid;
 	}
