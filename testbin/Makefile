@@ -42,6 +42,7 @@ all depend tags clean install:
 	(cd triplesort && $(MAKE) $@)
 	(cd simplefork && $(MAKE) $@)
 	(cd simpleexecv && $(MAKE) $@)
+	(cd simpleexit && $(MAKE) $@)
 
 # But not:
 #    malloctest     (no malloc/free until you write it)
