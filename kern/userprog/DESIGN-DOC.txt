@@ -41,4 +41,3 @@ Overall, a few new structures and structure modifications were made. To compensa
 
 [pid.c, pid.h] As discussed previously, a more optimal PID management system likely exists. We considered experimenting with some other data structures, but ultimately decided that it would not be worth the time and potential for reduced stability and predictability. 
 
-
