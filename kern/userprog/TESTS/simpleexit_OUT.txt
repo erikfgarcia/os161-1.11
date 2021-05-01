@@ -1,0 +1,53 @@
+rsears2@zeus-2:~/os161/root$ sys161 kernel
+sys161: System/161 release 1.14, compiled Sep  4 2014 10:34:58
+Hello World
+
+OS/161 base system version 1.11
+Copyright (c) 2000, 2001, 2002, 2003
+   President and Fellows of Harvard College.  All rights reserved.
+
+Put-your-group-name-here's system version 0 (ASST2 #24)
+
+Cpu is MIPS r2000/r3000
+328k physical memory available
+Device probe...
+lamebus0 (system main bus)
+emu0 at lamebus0
+ltrace0 at lamebus0
+ltimer0 at lamebus0
+hardclock on ltimer0 (100 hz)
+beep0 at ltimer0
+rtclock0 at ltimer0
+lrandom0 at lamebus0
+random0 at lrandom0
+lhd0 at lamebus0
+lhd1 at lamebus0
+lser0 at lamebus0
+con0 at lser0
+pseudorand0 (virtual)
+
+OS/161 kernel [? for menu]: p testbin/simpleexit
+PARENT of 102, PID=101
+CHILD of 101, PID=102
+CHILD: sleeping
+ ==> 0/10 done
+ ==> 1/10 done
+ ==> 2/10 done
+ ==> 3/10 done
+ ==> 4/10 done
+ ==> 5/10 done
+ ==> 6/10 done
+ ==> 7/10 done
+ ==> 8/10 done
+ ==> 9/10 done
+CHILD: awake, exit
+PARENT waited on 102 [exit 37], PID=101
+Operation took 2.874007360 seconds
+OS/161 kernel [? for menu]: q
+Shutting down.
+The system is halted.
+sys161: 773444847 cycles (9758911k, 22027004u, 741658932i)
+sys161: 4045 irqs 425 exns 0r/0w disk 25r/984w console 8r/0w/3m emufs 0r/0w net
+sys161: Elapsed real time: 30.933703 seconds (25.0033 mhz)
+sys161: Elapsed virtual time: 30.937793880 seconds (25 mhz)
+rsears2@zeus-2:~/os161/root$
